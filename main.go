@@ -36,6 +36,7 @@ func main() {
 	http.HandleFunc("/expenses/add", expenseAddHandler)
 	http.HandleFunc("/expenses/edit", expenseEditHandler)
 	http.HandleFunc("/expenses/delete", expenseDeleteHandler)
+	http.HandleFunc("/create-owner", createOwnerHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
