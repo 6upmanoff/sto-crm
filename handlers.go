@@ -1642,25 +1642,3 @@ func clientDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/clients", http.StatusSeeOther)
 }
-
-func createOwnerHandler(w http.ResponseWriter, r *http.Request) {
-	password := "6upmanofF_03" // можешь поменять
-
-	hash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-
-	_, err := db.Exec(`
-        INSERT INTO users (full_name, email, password_hash, role)
-        VALUES ($1, $2, $3, 'owner')
-    `,
-		"Tulegen Owner",
-		"tulegen_03@mail.ru",
-		string(hash),
-	)
-
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
-	w.Write([]byte("Owner created"))
-}
