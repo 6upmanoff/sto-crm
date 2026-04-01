@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -36,6 +37,11 @@ func main() {
 	http.HandleFunc("/expenses/edit", expenseEditHandler)
 	http.HandleFunc("/expenses/delete", expenseDeleteHandler)
 
-	log.Println("Сервер запущен на http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Println("Server running on port:", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
