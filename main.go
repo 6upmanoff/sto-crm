@@ -1,0 +1,41 @@
+package main
+
+import (
+	"log"
+	"net/http"
+)
+
+func main() {
+	initDB()
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
+	http.HandleFunc("/login", loginPageHandler)
+	http.HandleFunc("/logout", logoutHandler)
+	http.HandleFunc("/owner/dashboard", ownerDashboardHandler)
+	http.HandleFunc("/owner/leads", ownerLeadsHandler)
+	http.HandleFunc("/owner/leads/add", ownerLeadAddHandler)
+	http.HandleFunc("/owner/companies/view", ownerCompanyDetailHandler)
+	http.HandleFunc("/owner/companies/toggle", ownerCompanyToggleHandler)
+	http.HandleFunc("/owner/companies/extend", ownerCompanyExtendHandler)
+	http.HandleFunc("/lead/dashboard", leadDashboardHandler)
+	http.HandleFunc("/lead/companies/add", leadCompanyAddHandler)
+	http.HandleFunc("/lead/companies/access", leadCompanyAccessHandler)
+
+	http.HandleFunc("/", dashboardHandler)
+	http.HandleFunc("/clients", clientsHandler)
+	http.HandleFunc("/clients/add", clientAddHandler)
+	http.HandleFunc("/clients/view", clientDetailHandler)
+	http.HandleFunc("/clients/edit", clientEditHandler)
+	http.HandleFunc("/clients/delete", clientDeleteHandler)
+	http.HandleFunc("/orders", ordersHandler)
+	http.HandleFunc("/orders/add", orderAddHandler)
+	http.HandleFunc("/orders/edit", orderEditHandler)
+	http.HandleFunc("/orders/delete", orderDeleteHandler)
+	http.HandleFunc("/expenses", expensesHandler)
+	http.HandleFunc("/expenses/add", expenseAddHandler)
+	http.HandleFunc("/expenses/edit", expenseEditHandler)
+	http.HandleFunc("/expenses/delete", expenseDeleteHandler)
+
+	log.Println("Сервер запущен на http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}

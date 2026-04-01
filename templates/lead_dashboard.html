@@ -1,0 +1,175 @@
+{{define "content"}}
+<h2>Lead Dashboard</h2>
+<p class="page-subtitle">Ваши закреплённые компании и их текущий статус.</p>
+
+<style>
+  .lead-dashboard-mobile-list {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .lead-dashboard-stats {
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      margin-bottom: 12px !important;
+    }
+
+    .lead-dashboard-stats .stat-card {
+      min-height: auto !important;
+      padding: 14px !important;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .lead-dashboard-stats .stat-card h3 {
+      margin: 0 0 8px 0 !important;
+      font-size: 16px !important;
+    }
+
+    .lead-dashboard-stats .stat-card p {
+      margin: 0 !important;
+      font-size: 16px !important;
+    }
+
+    .lead-dashboard-table {
+      display: none;
+    }
+
+    .lead-dashboard-mobile-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .lead-company-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .lead-company-card h3 {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+    }
+
+    .lead-company-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 14px;
+      margin-bottom: 10px;
+    }
+
+    .lead-company-meta-label {
+      color: #6b7280;
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .lead-company-actions {
+      display: grid;
+      gap: 6px;
+    }
+
+    .lead-company-actions a {
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+
+<div class="stats lead-dashboard-stats" style="margin-bottom: 20px; display:grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 16px; align-items: stretch;">
+  <div class="stat-card" style="min-height: 118px; padding:18px;">
+    <h3>Lead</h3>
+    <p>{{.User.FullName}}</p>
+    <div style="margin-top:8px; color:#6b7280; font-size:14px;">{{.User.Email}}</div>
+  </div>
+
+  <div class="stat-card" style="min-height: 118px; padding:18px;">
+    <h3>Компаний</h3>
+    <p>{{len .Companies}}</p>
+    <div style="margin-top:8px; color:#6b7280; font-size:14px;">Закреплено за вами</div>
+  </div>
+</div>
+
+<div class="actions">
+  <a href="/lead/companies/add">Добавить компанию</a>
+</div>
+
+<div class="table-card lead-dashboard-table" id="companies-section">
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>Компания</th>
+      <th>Trial</th>
+      <th>Подписка</th>
+      <th>Статус</th>
+      <th>Создана</th>
+      <th>Действие</th>
+    </tr>
+
+    {{range .Companies}}
+    <tr>
+      <td>{{.ID}}</td>
+      <td><strong>{{.Name}}</strong></td>
+      <td>{{if .TrialUntil}}{{.TrialUntil}}{{else}}—{{end}}</td>
+      <td>{{if .SubscriptionUntil}}{{.SubscriptionUntil}}{{else}}—{{end}}</td>
+      <td>
+        {{if .IsActive}}
+          <span style="color:green;">Активна</span>
+        {{else}}
+          <span style="color:red;">Неактивна</span>
+        {{end}}
+      </td>
+      <td>{{.CreatedAt}}</td>
+      <td>
+        {{if .HasAccess}}
+          <span>Доступ выдан</span>
+        {{else}}
+          <a href="/lead/companies/access?company_id={{.ID}}">Выдать доступ</a>
+        {{end}}
+      </td>
+    </tr>
+    {{end}}
+  </table>
+</div>
+
+<div class="lead-dashboard-mobile-list">
+  {{range .Companies}}
+  <div class="lead-company-card">
+    <h3>{{.Name}}</h3>
+
+    <div class="lead-company-meta">
+      <div>
+        <div class="lead-company-meta-label">ID</div>
+        <div>{{.ID}}</div>
+      </div>
+      <div>
+        <div class="lead-company-meta-label">Статус</div>
+        <div>{{if .IsActive}}Активна{{else}}Неактивна{{end}}</div>
+      </div>
+      <div>
+        <div class="lead-company-meta-label">Trial</div>
+        <div>{{if .TrialUntil}}{{.TrialUntil}}{{else}}—{{end}}</div>
+      </div>
+      <div>
+        <div class="lead-company-meta-label">Подписка</div>
+        <div>{{if .SubscriptionUntil}}{{.SubscriptionUntil}}{{else}}—{{end}}</div>
+      </div>
+    </div>
+
+    <div class="lead-company-actions">
+      {{if .HasAccess}}
+        <span style="text-align:center;">Доступ выдан</span>
+      {{else}}
+        <a href="/lead/companies/access?company_id={{.ID}}">Выдать доступ</a>
+      {{end}}
+    </div>
+  </div>
+  {{end}}
+</div>
+
+{{end}}

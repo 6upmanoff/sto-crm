@@ -1,0 +1,33 @@
+{{define "content"}}
+<h2>Вход в систему</h2>
+<p class="page-subtitle">Введите данные для входа в свой аккаунт.</p>
+
+{{if .Error}}
+<div style="margin-bottom:16px; padding:12px 14px; border-radius:10px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-weight:600;">
+  {{.Error}}
+</div>
+{{end}}
+
+<div class="table-card" style="max-width: 520px; padding: 22px;">
+  <form method="POST" action="/login">
+    <label>Email:</label><br>
+    <input type="email" name="email" placeholder="Например: owner@demo.local" required>
+
+    <br><br>
+
+    <label>Пароль:</label><br>
+    <input type="password" name="password" placeholder="Введите пароль" required>
+
+    <br><br>
+
+    <button type="submit">Войти</button>
+  </form>
+</div>
+
+<div style="margin-top:18px; color:#6b7280; font-size:14px; line-height:1.6;">
+  <strong>Тестовые аккаунты:</strong><br>
+  owner@demo.local / owner123<br>
+  lead@demo.local / lead123<br>
+  client@demo.local / client123
+</div>
+{{end}}

@@ -1,0 +1,214 @@
+{{define "content"}}
+<style>
+  .clients-desktop {
+    display: block;
+  }
+
+  .clients-mobile {
+    display: none;
+  }
+
+  .client-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    margin-bottom: 14px;
+  }
+
+  .client-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .client-card-id {
+    font-size: 13px;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .client-card-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .client-card-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .client-card-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .client-card-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+  }
+
+  .client-card-value {
+    font-size: 15px;
+    color: #111827;
+    word-break: break-word;
+  }
+
+  .client-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .client-card-actions a,
+  .client-card-actions button {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    text-decoration: none;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .client-btn-history {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+  }
+
+  .client-btn-edit {
+    background: #f5f3ff;
+    border: 1px solid #ddd6fe;
+    color: #6d28d9;
+  }
+
+  .client-btn-delete {
+    background: #dc2626;
+    border: none;
+    color: #fff;
+  }
+
+  @media (max-width: 768px) {
+    .clients-desktop {
+      display: none;
+    }
+
+    .clients-mobile {
+      display: block;
+    }
+
+    .client-card {
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .client-card-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+      margin-bottom: 10px;
+    }
+
+    .client-card-actions {
+      gap: 6px;
+    }
+  }
+</style>
+
+<h2>Клиенты</h2>
+<p class="page-subtitle">База клиентов с машинами и быстрыми действиями.</p>
+
+<div class="actions">
+  <a href="/clients/add">Добавить клиента</a>
+</div>
+
+<div class="clients-desktop">
+  <div class="table-card">
+    <table style="min-width: 980px;">
+      <tr>
+        <th style="width:70px;">ID</th>
+        <th style="min-width:180px;">Имя</th>
+        <th style="min-width:170px;">Телефон</th>
+        <th style="min-width:160px;">Номер машины</th>
+        <th style="min-width:180px;">Модель</th>
+        <th style="min-width:320px;">Действия</th>
+      </tr>
+
+      {{range .Clients}}
+      <tr>
+        <td style="padding-top:14px; padding-bottom:14px;">{{.ID}}</td>
+        <td style="padding-top:14px; padding-bottom:14px;"><strong>{{.Name}}</strong></td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{if .Phone}}{{.Phone}}{{else}}—{{end}}</td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{if .CarNumber}}{{.CarNumber}}{{else}}—{{end}}</td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{if .CarModel}}{{.CarModel}}{{else}}—{{end}}</td>
+        <td style="padding-top:12px; padding-bottom:12px;">
+          <div class="row-actions">
+            <a href="/clients/view?id={{.ID}}" style="text-decoration:none; padding:8px 12px; border-radius:8px; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-size:14px; font-weight:600;">История</a>
+            <a href="/clients/edit?id={{.ID}}" style="text-decoration:none; padding:8px 12px; border-radius:8px; background:#f5f3ff; border:1px solid #ddd6fe; color:#6d28d9; font-size:14px; font-weight:600;">Редактировать</a>
+            <form method="POST" action="/clients/delete?id={{.ID}}" class="inline-form" style="margin:0;">
+              <button type="submit" style="width:auto; margin-top:0; padding:8px 12px; border-radius:8px; background:#dc2626; color:#fff; border:none; font-size:14px; font-weight:600;">Удалить</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="6" style="padding-top:18px; padding-bottom:18px; text-align:center; color:#6b7280;">Клиентов пока нет</td>
+      </tr>
+      {{end}}
+    </table>
+  </div>
+</div>
+
+<div class="clients-mobile">
+  {{range .Clients}}
+  <div class="client-card">
+    <div class="client-card-header">
+      <h3 class="client-card-name">{{.Name}}</h3>
+      <div class="client-card-id">ID: {{.ID}}</div>
+    </div>
+
+    <div class="client-card-grid">
+      <div class="client-card-row">
+        <div class="client-card-label">Телефон</div>
+        <div class="client-card-value">{{if .Phone}}{{.Phone}}{{else}}—{{end}}</div>
+      </div>
+
+      <div class="client-card-row">
+        <div class="client-card-label">Номер машины</div>
+        <div class="client-card-value">{{if .CarNumber}}{{.CarNumber}}{{else}}—{{end}}</div>
+      </div>
+
+      <div class="client-card-row">
+        <div class="client-card-label">Модель</div>
+        <div class="client-card-value">{{if .CarModel}}{{.CarModel}}{{else}}—{{end}}</div>
+      </div>
+    </div>
+
+    <div class="client-card-actions">
+      <a href="/clients/view?id={{.ID}}" class="client-btn-history">История</a>
+      <a href="/clients/edit?id={{.ID}}" class="client-btn-edit">Редактировать</a>
+      <form method="POST" action="/clients/delete?id={{.ID}}" style="margin:0;">
+        <button type="submit" class="client-btn-delete">Удалить</button>
+      </form>
+    </div>
+  </div>
+  {{else}}
+  <div class="table-card" style="padding:18px; text-align:center; color:#6b7280;">Клиентов пока нет</div>
+  {{end}}
+</div>
+{{end}}

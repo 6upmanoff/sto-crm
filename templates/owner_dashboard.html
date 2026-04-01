@@ -1,0 +1,251 @@
+{{define "content"}}
+<h2>Owner Dashboard</h2>
+<p class="page-subtitle">Общий контроль по leads, компаниям и доступам клиентов.</p>
+
+<style>
+  .owner-dashboard-mobile-list {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .owner-dashboard-stats {
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      margin-bottom: 12px !important;
+    }
+    .owner-dashboard-stats .stat-card {
+      min-height: auto !important;
+      padding: 14px !important;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+    .owner-dashboard-stats .stat-card h3 {
+      margin: 0 0 8px 0 !important;
+      font-size: 16px !important;
+      line-height: 1.25 !important;
+    }
+    .owner-dashboard-stats .stat-card p {
+      margin: 0 !important;
+      font-size: 16px !important;
+      line-height: 1.3 !important;
+    }
+
+    .owner-dashboard-table {
+      display: none;
+    }
+
+    .owner-dashboard-mobile-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .owner-company-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .owner-company-card h3 {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    .owner-company-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 14px;
+      margin-bottom: 10px;
+    }
+
+    .owner-company-meta-label {
+      color: #6b7280;
+      font-size: 12px;
+      margin-bottom: 2px;
+      line-height: 1.2;
+    }
+
+    .owner-company-actions {
+      display: grid;
+      gap: 6px;
+    }
+
+    .owner-company-actions a,
+    .owner-company-actions button {
+      width: 100%;
+      box-sizing: border-box;
+      justify-content: center;
+    }
+
+    .owner-company-actions form {
+      margin: 0;
+    }
+  }
+</style>
+
+<div class="stats owner-dashboard-stats" style="margin-bottom: 10px; display:grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 16px; align-items: stretch;">
+  <div class="stat-card" style="min-height: 118px; display:flex; flex-direction:column; justify-content:flex-start; padding:18px;">
+    <div>
+      <h3 style="margin-bottom:10px;">Owner</h3>
+      <p style="font-size:18px; margin:0; line-height:1.25;">{{.User.FullName}}</p>
+    </div>
+    <div style="margin-top:10px; color:#6b7280; font-size:14px; line-height:1.4; word-break:break-word;">{{.User.Email}}</div>
+  </div>
+
+  <div class="stat-card" style="min-height: 118px; display:flex; flex-direction:column; justify-content:flex-start; padding:18px;">
+    <div>
+      <h3 style="margin-bottom:10px;">Lead'ов</h3>
+      <p style="margin:0; line-height:1.2;">{{.LeadsCount}}</p>
+    </div>
+    <div style="margin-top:10px; color:#6b7280; font-size:14px; line-height:1.4;">Всего в системе</div>
+  </div>
+
+  <div class="stat-card" style="min-height: 118px; display:flex; flex-direction:column; justify-content:flex-start; padding:18px;">
+    <div>
+      <h3 style="margin-bottom:10px;">Компаний</h3>
+      <p style="margin:0; line-height:1.2;">{{len .Companies}}</p>
+    </div>
+    <div style="margin-top:10px; color:#6b7280; font-size:14px; line-height:1.4;">Всего создано</div>
+  </div>
+</div>
+
+<div class="table-card owner-dashboard-table" id="companies-section" style="margin-top: 0;">
+  <table>
+    <tr>
+      <th style="width:70px;">ID</th>
+      <th>Компания</th>
+      <th style="width:170px;">Lead</th>
+      <th style="width:140px;">Trial</th>
+      <th style="width:160px;">Подписка</th>
+      <th style="width:130px;">Статус</th>
+      <th style="width:140px;">Доступ</th>
+      <th style="width:170px;">Создана</th>
+      <th style="width:320px;">Действия</th>
+    </tr>
+
+    {{range .Companies}}
+    <tr>
+      <td style="padding-top:12px; padding-bottom:12px;">{{.ID}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;"><strong>{{.Name}}</strong></td>
+      <td style="padding-top:12px; padding-bottom:12px;">{{if .LeadName}}{{.LeadName}}{{else}}—{{end}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;">{{if .TrialUntil}}{{.TrialUntil}}{{else}}—{{end}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;">{{if .SubscriptionUntil}}{{.SubscriptionUntil}}{{else}}—{{end}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;">
+        {{if .IsActive}}
+          <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; font-weight:600; font-size:13px; line-height:1.2;">Активна</span>
+        {{else}}
+          <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-weight:600; font-size:13px; line-height:1.2;">Неактивна</span>
+        {{end}}
+      </td>
+      <td style="padding-top:12px; padding-bottom:12px;">
+        {{if .HasAccess}}
+          <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-weight:600; font-size:13px; line-height:1.2;">Выдан</span>
+        {{else}}
+          <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; border:1px solid #e5e7eb; color:#6b7280; font-weight:600; font-size:13px; line-height:1.2;">Нет</span>
+        {{end}}
+      </td>
+      <td style="padding-top:12px; padding-bottom:12px;">{{.CreatedAt}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <a href="/owner/companies/view?id={{.ID}}" style="display:inline-block; text-decoration:none; padding:8px 12px; border-radius:8px; background:#f8fafc; color:#0f172a; border:1px solid #cbd5e1; font-size:13px; font-weight:600;">Открыть</a>
+
+          <form method="POST" action="/owner/companies/toggle?company_id={{.ID}}" style="margin:0;">
+            {{if .IsActive}}
+              <button type="submit" style="width:auto; margin-top:0; padding:8px 12px; border-radius:8px; background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; font-size:13px; font-weight:600;">Деактивировать</button>
+            {{else}}
+              <button type="submit" style="width:auto; margin-top:0; padding:8px 12px; border-radius:8px; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:13px; font-weight:600;">Активировать</button>
+            {{end}}
+          </form>
+
+          <form method="POST" action="/owner/companies/extend?company_id={{.ID}}" style="margin:0;">
+            <button type="submit" style="width:auto; margin-top:0; padding:8px 12px; border-radius:8px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:13px; font-weight:600;">Продлить +30 дней</button>
+          </form>
+        </div>
+      </td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="9" style="text-align:center; color:#6b7280; padding:22px 18px; line-height:1.45;">
+        Пока нет компаний в системе
+      </td>
+    </tr>
+    {{end}}
+  </table>
+</div>
+
+<div class="owner-dashboard-mobile-list" id="companies-section-mobile">
+  {{range .Companies}}
+  <div class="owner-company-card">
+    <h3>{{.Name}}</h3>
+
+    <div class="owner-company-meta">
+      <div>
+        <div class="owner-company-meta-label">ID</div>
+        <div>{{.ID}}</div>
+      </div>
+      <div>
+        <div class="owner-company-meta-label">Lead</div>
+        <div>{{if .LeadName}}{{.LeadName}}{{else}}—{{end}}</div>
+      </div>
+      <div>
+        <div class="owner-company-meta-label">Trial</div>
+        <div>{{if .TrialUntil}}{{.TrialUntil}}{{else}}—{{end}}</div>
+      </div>
+      <div>
+        <div class="owner-company-meta-label">Подписка</div>
+        <div>{{if .SubscriptionUntil}}{{.SubscriptionUntil}}{{else}}—{{end}}</div>
+      </div>
+      <div>
+        <div class="owner-company-meta-label">Статус</div>
+        <div>
+          {{if .IsActive}}
+            <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; font-weight:600; font-size:13px; line-height:1.2;">Активна</span>
+          {{else}}
+            <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-weight:600; font-size:13px; line-height:1.2;">Неактивна</span>
+          {{end}}
+        </div>
+      </div>
+      <div>
+        <div class="owner-company-meta-label">Доступ</div>
+        <div>
+          {{if .HasAccess}}
+            <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-weight:600; font-size:13px; line-height:1.2;">Выдан</span>
+          {{else}}
+            <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; border:1px solid #e5e7eb; color:#6b7280; font-weight:600; font-size:13px; line-height:1.2;">Нет</span>
+          {{end}}
+        </div>
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <div class="owner-company-meta-label">Создана</div>
+        <div>{{.CreatedAt}}</div>
+      </div>
+    </div>
+
+    <div class="owner-company-actions">
+      <a href="/owner/companies/view?id={{.ID}}" style="display:flex; text-decoration:none; padding:10px 14px; border-radius:10px; background:#f8fafc; color:#0f172a; border:1px solid #cbd5e1; font-size:14px; font-weight:600;">Открыть</a>
+
+      <form method="POST" action="/owner/companies/extend?company_id={{.ID}}">
+        <button type="submit" style="margin-top:0; padding:10px 14px; border-radius:10px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:14px; font-weight:600;">Продлить +30 дней</button>
+      </form>
+
+      <form method="POST" action="/owner/companies/toggle?company_id={{.ID}}">
+        {{if .IsActive}}
+          <button type="submit" style="margin-top:0; padding:10px 14px; border-radius:10px; background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; font-size:14px; font-weight:600;">Деактивировать</button>
+        {{else}}
+          <button type="submit" style="margin-top:0; padding:10px 14px; border-radius:10px; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:14px; font-weight:600;">Активировать</button>
+        {{end}}
+      </form>
+    </div>
+  </div>
+  {{else}}
+  <div class="owner-company-card" style="text-align:center; color:#6b7280; line-height:1.45;">
+    Пока нет компаний в системе
+  </div>
+  {{end}}
+</div>
+{{end}}

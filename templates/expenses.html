@@ -1,0 +1,220 @@
+{{define "content"}}
+<style>
+  .expenses-desktop {
+    display: block;
+  }
+
+  .expenses-mobile {
+    display: none;
+  }
+
+  .expense-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 14px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    margin-bottom: 12px;
+  }
+
+  .expense-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .expense-card-id {
+    font-size: 13px;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .expense-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .expense-card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+    margin-bottom: 12px;
+  }
+
+  .expense-card-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .expense-card-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+  }
+
+  .expense-card-value {
+    font-size: 15px;
+    color: #111827;
+    word-break: break-word;
+  }
+
+  .expense-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .expense-card-actions a,
+  .expense-card-actions button {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    text-decoration: none;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .expense-btn-edit {
+    background: #f5f3ff;
+    border: 1px solid #ddd6fe;
+    color: #6d28d9;
+  }
+
+  .expense-btn-delete {
+    background: #dc2626;
+    border: none;
+    color: #fff;
+  }
+
+  @media (max-width: 768px) {
+    .expenses-desktop {
+      display: none;
+    }
+
+    .expenses-mobile {
+      display: block;
+    }
+
+    .expense-card {
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .expense-card-header {
+      margin-bottom: 10px;
+    }
+
+    .expense-card-title {
+      font-size: 16px;
+    }
+
+    .expense-card-id {
+      font-size: 12px;
+      padding: 3px 7px;
+    }
+
+    .expense-card-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 10px;
+      margin-bottom: 10px;
+    }
+
+    .expense-card-label {
+      font-size: 11px;
+    }
+
+    .expense-card-value {
+      font-size: 14px;
+    }
+
+    .expense-card-actions {
+      gap: 6px;
+    }
+  }
+</style>
+
+<h2>Расходы</h2>
+<p class="page-subtitle">Все расходы с быстрым редактированием и удалением.</p>
+
+<div class="actions">
+  <a href="/expenses/add">Добавить расход</a>
+</div>
+
+<div class="expenses-desktop">
+  <div class="table-card">
+    <table style="min-width: 860px;">
+      <tr>
+        <th style="width:70px;">ID</th>
+        <th style="min-width:220px;">Название</th>
+        <th style="width:140px;">Сумма</th>
+        <th style="width:150px;">Дата</th>
+        <th style="min-width:230px;">Действия</th>
+      </tr>
+
+      {{range .Expenses}}
+      <tr>
+        <td style="padding-top:14px; padding-bottom:14px;">{{.ID}}</td>
+        <td style="padding-top:14px; padding-bottom:14px;"><strong>{{.Name}}</strong></td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{.Amount}} ₸</td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{.CreatedAt}}</td>
+        <td style="padding-top:12px; padding-bottom:12px;">
+          <div class="row-actions">
+            <a href="/expenses/edit?id={{.ID}}" style="text-decoration:none; padding:8px 12px; border-radius:8px; background:#f5f3ff; border:1px solid #ddd6fe; color:#6d28d9; font-size:14px; font-weight:600;">Редактировать</a>
+            <form method="POST" action="/expenses/delete?id={{.ID}}" class="inline-form" style="margin:0;">
+              <button type="submit" style="width:auto; margin-top:0; padding:8px 12px; border-radius:8px; background:#dc2626; color:#fff; border:none; font-size:14px; font-weight:600;">Удалить</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="5" style="padding-top:18px; padding-bottom:18px; text-align:center; color:#6b7280;">Расходов пока нет</td>
+      </tr>
+      {{end}}
+    </table>
+  </div>
+</div>
+
+<div class="expenses-mobile">
+  {{range .Expenses}}
+  <div class="expense-card">
+    <div class="expense-card-header">
+      <h3 class="expense-card-title">{{.Name}}</h3>
+      <div class="expense-card-id">ID: {{.ID}}</div>
+    </div>
+
+    <div class="expense-card-grid">
+      <div class="expense-card-row">
+        <div class="expense-card-label">Сумма</div>
+        <div class="expense-card-value">{{.Amount}} ₸</div>
+      </div>
+
+      <div class="expense-card-row">
+        <div class="expense-card-label">Дата</div>
+        <div class="expense-card-value">{{.CreatedAt}}</div>
+      </div>
+    </div>
+
+    <div class="expense-card-actions">
+      <a href="/expenses/edit?id={{.ID}}" class="expense-btn-edit">Редактировать</a>
+      <form method="POST" action="/expenses/delete?id={{.ID}}" style="margin:0;">
+        <button type="submit" class="expense-btn-delete">Удалить</button>
+      </form>
+    </div>
+  </div>
+  {{else}}
+  <div class="table-card" style="padding:18px; text-align:center; color:#6b7280;">Расходов пока нет</div>
+  {{end}}
+</div>
+{{end}}

@@ -1,0 +1,44 @@
+{{define "content"}}
+<h2>Редактировать заказ</h2>
+<p class="page-subtitle">Изменение данных уже созданного заказа.</p>
+
+<form method="POST">
+  <label>Клиент:</label><br>
+  <select name="client_id" required>
+    <option value="">Выберите клиента</option>
+    {{range .Clients}}
+    <option value="{{.ID}}" {{if eq .ID $.Order.ClientID}}selected{{end}}>{{.Name}}</option>
+    {{end}}
+  </select>
+
+  <br><br>
+
+  <label>Услуга:</label><br>
+  <input type="text" name="service" value="{{.Order.Service}}" placeholder="Например: Замена шин" required>
+
+  <br><br>
+
+  <label>Цена:</label><br>
+  <input type="number" step="0.01" name="price" value="{{.Order.Price}}" placeholder="Например: 8000" required>
+
+  <br><br>
+
+  <label>Тип оплаты:</label><br>
+  <select name="payment_type">
+    <option value="cash" {{if eq .Order.PaymentType "cash"}}selected{{end}}>Наличные</option>
+    <option value="transfer" {{if eq .Order.PaymentType "transfer"}}selected{{end}}>Перевод</option>
+  </select>
+
+  <br><br>
+
+  <label>Статус:</label><br>
+  <select name="status">
+    <option value="new" {{if eq .Order.Status "new"}}selected{{end}}>Новый</option>
+    <option value="done" {{if eq .Order.Status "done"}}selected{{end}}>Готово</option>
+  </select>
+
+  <br><br>
+
+  <button type="submit">Сохранить</button>
+</form>
+{{end}}

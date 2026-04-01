@@ -1,0 +1,122 @@
+{{define "content"}}
+<h2>Lead'ы</h2>
+<p class="page-subtitle">Список lead-пользователей и их текущая активность.</p>
+
+<style>
+  .owner-leads-mobile-list {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .owner-leads-table {
+      display: none;
+    }
+
+    .owner-leads-mobile-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .owner-lead-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .owner-lead-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+    }
+
+    .owner-lead-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 14px;
+    }
+
+    .owner-lead-meta-label {
+      color: #6b7280;
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+  }
+</style>
+
+<div class="actions">
+  <a href="/owner/leads/add">Добавить lead</a>
+</div>
+
+<div class="table-card owner-leads-table" style="margin-top: 8px;">
+  <table>
+    <tr>
+      <th style="width:70px;">ID</th>
+      <th>Имя</th>
+      <th style="width:220px;">Email</th>
+      <th style="width:110px;">Компаний</th>
+      <th style="width:130px;">Активных</th>
+      <th style="width:130px;">С доступом</th>
+      <th style="width:170px;">Создан</th>
+    </tr>
+
+    {{range .Leads}}
+    <tr>
+      <td style="padding-top:12px; padding-bottom:12px;">{{.ID}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;"><strong>{{.FullName}}</strong></td>
+      <td style="padding-top:12px; padding-bottom:12px;">{{.Email}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;">{{.CompaniesCount}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;">{{.ActiveCompaniesCount}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;">{{.AccessIssuedCount}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;">{{.CreatedAt}}</td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="7" style="text-align:center; color:#6b7280; padding:22px 18px; line-height:1.45;">
+        Пока нет lead-пользователей
+      </td>
+    </tr>
+    {{end}}
+  </table>
+</div>
+
+<div class="owner-leads-mobile-list">
+  {{range .Leads}}
+  <div class="owner-lead-card">
+    <h3>{{.FullName}}</h3>
+
+    <div class="owner-lead-meta">
+      <div>
+        <div class="owner-lead-meta-label">ID</div>
+        <div>{{.ID}}</div>
+      </div>
+      <div>
+        <div class="owner-lead-meta-label">Email</div>
+        <div>{{.Email}}</div>
+      </div>
+      <div>
+        <div class="owner-lead-meta-label">Компаний</div>
+        <div>{{.CompaniesCount}}</div>
+      </div>
+      <div>
+        <div class="owner-lead-meta-label">Активных</div>
+        <div>{{.ActiveCompaniesCount}}</div>
+      </div>
+      <div>
+        <div class="owner-lead-meta-label">С доступом</div>
+        <div>{{.AccessIssuedCount}}</div>
+      </div>
+      <div>
+        <div class="owner-lead-meta-label">Создан</div>
+        <div>{{.CreatedAt}}</div>
+      </div>
+    </div>
+  </div>
+  {{else}}
+  <div class="owner-lead-card" style="text-align:center; color:#6b7280;">
+    Пока нет lead-пользователей
+  </div>
+  {{end}}
+</div>
+{{end}}

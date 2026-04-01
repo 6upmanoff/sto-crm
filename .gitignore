@@ -1,0 +1,12 @@
+# бинарники
+app
+*.exe
+
+# macOS
+.DS_Store
+
+# env
+.env
+
+# логи
+*.log

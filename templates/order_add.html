@@ -1,0 +1,44 @@
+{{define "content"}}
+<h2>Добавить заказ</h2>
+<p class="page-subtitle">Оформление нового заказа для клиента.</p>
+
+<form method="POST">
+  <label>Клиент:</label><br>
+  <select name="client_id" required>
+    <option value="">Выберите клиента</option>
+    {{range .Clients}}
+    <option value="{{.ID}}">{{.Name}}</option>
+    {{end}}
+  </select>
+
+  <br><br>
+
+  <label>Услуга:</label><br>
+  <input type="text" name="service" placeholder="Например: Замена шин" required>
+
+  <br><br>
+
+  <label>Цена:</label><br>
+  <input type="number" name="price" placeholder="Например: 8000" required>
+
+  <br><br>
+
+  <label>Тип оплаты:</label><br>
+  <select name="payment_type">
+    <option value="cash">Наличные</option>
+    <option value="transfer">Перевод</option>
+  </select>
+
+  <br><br>
+
+  <label>Статус:</label><br>
+  <select name="status">
+    <option value="new">Новый</option>
+    <option value="done">Готово</option>
+  </select>
+
+  <br><br>
+
+  <button type="submit">Сохранить</button>
+</form>
+{{end}}

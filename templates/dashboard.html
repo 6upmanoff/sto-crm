@@ -1,0 +1,36 @@
+{{define "content"}}
+<h2>Главная</h2>
+<p class="page-subtitle">Краткая сводка по заказам, расходам и прибыли.</p>
+
+<div class="dashboard-grid">
+  <div class="dashboard-card revenue-card">
+    <div class="card-label">Выручка</div>
+    <div class="card-value">{{.TotalRevenue}} ₸</div>
+    <div class="card-note">Сумма всех оформленных заказов</div>
+  </div>
+
+  <div class="dashboard-card orders-card">
+    <div class="card-label">Количество заказов</div>
+    <div class="card-value">{{.OrdersCount}}</div>
+    <div class="card-note">Все добавленные заказы в системе</div>
+  </div>
+
+  <div class="dashboard-card expenses-card">
+    <div class="card-label">Расходы</div>
+    <div class="card-value">{{.TotalExpenses}} ₸</div>
+    <div class="card-note">Все расходы, внесенные в систему</div>
+  </div>
+
+  <div class="dashboard-card profit-card">
+    <div class="card-label">Чистая прибыль</div>
+    <div class="card-value">{{.Profit}} ₸</div>
+    <div class="card-note">Выручка минус расходы</div>
+  </div>
+</div>
+
+<div class="dashboard-actions">
+  <a href="/orders/add" class="dashboard-button primary-button">Новый заказ</a>
+  <a href="/clients/add" class="dashboard-button">Новый клиент</a>
+  <a href="/expenses/add" class="dashboard-button">Новый расход</a>
+</div>
+{{end}}

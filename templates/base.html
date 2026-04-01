@@ -1,0 +1,127 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.Title}}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-top">
+        <div>
+          <div class="brand-badge">Система учета</div>
+          <a href="/" class="brand-link">
+            <h1>STO CRM</h1>
+          </a>
+          <p class="header-subtitle">Учет клиентов, заказов, расходов и прибыли</p>
+        </div>
+
+        <button class="menu-toggle" type="button" aria-label="Открыть меню" onclick="document.body.classList.toggle('menu-open')">
+          ☰
+        </button>
+      </div>
+
+      <nav class="nav desktop-nav app-nav app-nav-client">
+        <a href="/">Главная</a>
+        <a href="/clients">Клиенты</a>
+        <a href="/orders">Заказы</a>
+        <a href="/expenses">Расходы</a>
+        <a href="/logout" style="margin-left:12px; background:#7f1d1d; border-color:#991b1b; color:#fff;">Выйти</a>
+      </nav>
+
+      <nav class="nav desktop-nav app-nav app-nav-lead" style="display:none;">
+        <a href="/lead/dashboard">Мои компании</a>
+        <a href="/logout" style="margin-left:12px; background:#7f1d1d; border-color:#991b1b; color:#fff;">Выйти</a>
+      </nav>
+
+      <nav class="nav desktop-nav app-nav app-nav-owner" style="display:none;">
+        <a href="/owner/dashboard#companies-section">Компании</a>
+        <a href="/owner/leads">Lead'ы</a>
+        <a href="/logout" style="margin-left:12px; background:#7f1d1d; border-color:#991b1b; color:#fff;">Выйти</a>
+      </nav>
+    </header>
+  </div>
+
+  <div class="mobile-menu-overlay" onclick="document.body.classList.remove('menu-open')"></div>
+
+  <aside class="mobile-menu">
+    <div class="mobile-menu-header">
+      <span>Меню</span>
+      <button class="menu-close" type="button" aria-label="Закрыть меню" onclick="document.body.classList.remove('menu-open')">✕</button>
+    </div>
+
+    <nav class="mobile-nav app-mobile-nav app-mobile-nav-client">
+      <a href="/" onclick="document.body.classList.remove('menu-open')">Главная</a>
+      <a href="/clients" onclick="document.body.classList.remove('menu-open')">Клиенты</a>
+      <a href="/orders" onclick="document.body.classList.remove('menu-open')">Заказы</a>
+      <a href="/expenses" onclick="document.body.classList.remove('menu-open')">Расходы</a>
+      <a href="/logout" onclick="document.body.classList.remove('menu-open')" style="background:#fef2f2; border-color:#fecaca; color:#b91c1c;">Выйти</a>
+    </nav>
+
+    <nav class="mobile-nav app-mobile-nav app-mobile-nav-lead" style="display:none;">
+      <a href="/lead/dashboard" onclick="document.body.classList.remove('menu-open')">Мои компании</a>
+      <a href="/logout" onclick="document.body.classList.remove('menu-open')" style="background:#fef2f2; border-color:#fecaca; color:#b91c1c;">Выйти</a>
+    </nav>
+
+    <nav class="mobile-nav app-mobile-nav app-mobile-nav-owner" style="display:none;">
+      <a href="/owner/dashboard#companies-section" onclick="document.body.classList.remove('menu-open')">Компании</a>
+      <a href="/owner/leads" onclick="document.body.classList.remove('menu-open')">Lead'ы</a>
+      <a href="/logout" onclick="document.body.classList.remove('menu-open')" style="background:#fef2f2; border-color:#fecaca; color:#b91c1c;">Выйти</a>
+    </nav>
+  </aside>
+
+  <div class="container">
+    <main class="content">
+      {{template "content" .}}
+    </main>
+  </div>
+<script>
+  (function () {
+    var isLeadArea = window.location.pathname.indexOf('/lead/') === 0;
+    var isOwnerArea = window.location.pathname.indexOf('/owner/') === 0;
+
+    var brandLink = document.querySelector('.brand-link');
+    if (brandLink && isLeadArea) {
+      brandLink.setAttribute('href', '/lead/dashboard');
+    }
+    if (brandLink && isOwnerArea) {
+      brandLink.setAttribute('href', '/owner/dashboard');
+    }
+
+    var clientDesktop = document.querySelector('.app-nav-client');
+    var leadDesktop = document.querySelector('.app-nav-lead');
+    var ownerDesktop = document.querySelector('.app-nav-owner');
+    var clientMobile = document.querySelector('.app-mobile-nav-client');
+    var leadMobile = document.querySelector('.app-mobile-nav-lead');
+    var ownerMobile = document.querySelector('.app-mobile-nav-owner');
+
+    if (isLeadArea) {
+      if (clientDesktop) clientDesktop.style.display = 'none';
+      if (leadDesktop) leadDesktop.style.display = 'flex';
+      if (ownerDesktop) ownerDesktop.style.display = 'none';
+      if (clientMobile) clientMobile.style.display = 'none';
+      if (leadMobile) leadMobile.style.display = 'flex';
+      if (ownerMobile) ownerMobile.style.display = 'none';
+    } else if (isOwnerArea) {
+      if (clientDesktop) clientDesktop.style.display = 'none';
+      if (leadDesktop) leadDesktop.style.display = 'none';
+      if (ownerDesktop) ownerDesktop.style.display = 'flex';
+      if (clientMobile) clientMobile.style.display = 'none';
+      if (leadMobile) leadMobile.style.display = 'none';
+      if (ownerMobile) ownerMobile.style.display = 'flex';
+    } else {
+      if (clientDesktop) clientDesktop.style.display = 'flex';
+      if (leadDesktop) leadDesktop.style.display = 'none';
+      if (ownerDesktop) ownerDesktop.style.display = 'none';
+      if (clientMobile) clientMobile.style.display = 'flex';
+      if (leadMobile) leadMobile.style.display = 'none';
+      if (ownerMobile) ownerMobile.style.display = 'none';
+    }
+  })();
+</script>
+</body>
+</html>
+{{end}}

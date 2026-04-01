@@ -1,0 +1,96 @@
+{{define "content"}}
+<h2>Выдать доступ клиенту</h2>
+<p class="page-subtitle">Создайте аккаунт клиента для компании <strong>{{.Company.Name}}</strong>.</p>
+
+<style>
+  @media (max-width: 900px) {
+    .access-card {
+      max-width: 100% !important;
+      padding: 16px !important;
+      border-radius: 16px;
+    }
+
+    .access-form input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      margin-top: 6px;
+    }
+
+    .access-form label {
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .access-form button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .access-actions a {
+      display: block;
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+
+{{if .Error}}
+<div style="margin-bottom:16px; padding:12px 14px; border-radius:10px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-weight:600;">
+  {{.Error}}
+</div>
+{{end}}
+
+{{if .Success}}
+<div class="table-card access-card" style="max-width: 560px; padding: 22px; margin-bottom: 18px;">
+  <p style="margin:0 0 10px 0;"><strong>Компания:</strong> {{.Company.Name}}</p>
+  <p style="margin:0 0 10px 0;"><strong>Email:</strong> {{.CreatedEmail}}</p>
+  <p style="margin:0;"><strong>Пароль:</strong> {{.CreatedPassword}}</p>
+</div>
+
+<div class="actions access-actions">
+  <a href="/lead/dashboard">Назад в dashboard</a>
+</div>
+{{else if .HasAccess}}
+<div class="table-card access-card" style="max-width: 560px; padding: 22px; margin-bottom: 18px;">
+  <p style="margin:0 0 10px 0;"><strong>Компания:</strong> {{.Company.Name}}</p>
+  <p style="margin:0 0 10px 0;"><strong>Доступ уже выдан:</strong> Да</p>
+  <p style="margin:0 0 10px 0;"><strong>Клиент:</strong> {{.ExistingClient.FullName}}</p>
+  <p style="margin:0;"><strong>Email:</strong> {{.ExistingClient.Email}}</p>
+</div>
+
+<div class="actions access-actions">
+  <a href="/lead/dashboard">Назад в dashboard</a>
+</div>
+{{else}}
+<div class="table-card access-card" style="max-width: 560px; padding: 22px;">
+  <form method="POST" class="access-form">
+    <label>Имя клиента:</label><br>
+    <input type="text" name="full_name" placeholder="Например: Ержан" required>
+
+    <br>
+
+    <label>Email:</label><br>
+    <input type="email" name="email" placeholder="Например: client@company.kz" required>
+
+    <br>
+
+    <label>Пароль:</label><br>
+    <input type="text" name="password" placeholder="Например: 12345678" required>
+
+    <br>
+
+    <button type="submit">Выдать доступ</button>
+  </form>
+</div>
+
+<div style="margin-top:18px; color:#6b7280; font-size:14px; line-height:1.6;">
+  После создания клиент сможет войти в систему под своей компанией.<br>
+  Рекомендуется сразу передать клиенту email и пароль.
+</div>
+{{end}}
+{{end}}

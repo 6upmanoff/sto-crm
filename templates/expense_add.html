@@ -1,0 +1,18 @@
+{{define "content"}}
+<h2>Добавить расход</h2>
+<p class="page-subtitle">Добавление нового расхода для расчета чистой прибыли.</p>
+
+<form method="POST">
+  <label>Название расхода:</label><br>
+  <input type="text" name="name" placeholder="Например: аренда" required>
+
+  <br><br>
+
+  <label>Сумма:</label><br>
+  <input type="number" name="amount" placeholder="Например: 50000" required>
+
+  <br><br>
+
+  <button type="submit">Сохранить</button>
+</form>
+{{end}}

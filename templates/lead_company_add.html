@@ -1,0 +1,30 @@
+
+
+{{define "content"}}
+<h2>Добавить компанию</h2>
+<p class="page-subtitle">Создайте новую компанию и выдайте ей пробный доступ.</p>
+
+{{if .Error}}
+<div style="margin-bottom:16px; padding:12px 14px; border-radius:10px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-weight:600;">
+  {{.Error}}
+</div>
+{{end}}
+
+<div class="table-card" style="max-width: 560px; padding: 22px;">
+  <form method="POST">
+    <label>Название компании / СТО:</label><br>
+    <input type="text" name="name" placeholder="Например: ShinLine Aktobe" required>
+
+    <br><br>
+
+    <button type="submit">Создать компанию</button>
+  </form>
+</div>
+
+<div style="margin-top:18px; color:#6b7280; font-size:14px; line-height:1.6;">
+  После создания компании автоматически выставится:<br>
+  — trial на 7 дней<br>
+  — активный статус<br>
+  — закрепление за текущим Lead
+</div>
+{{end}}

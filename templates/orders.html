@@ -1,0 +1,244 @@
+{{define "content"}}
+<style>
+  .orders-desktop {
+    display: block;
+  }
+
+  .orders-mobile {
+    display: none;
+  }
+
+  .order-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 14px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    margin-bottom: 12px;
+  }
+
+  .order-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .order-card-id {
+    font-size: 13px;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .order-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .order-card-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+
+  .order-card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+    margin-bottom: 12px;
+  }
+
+  .order-card-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .order-card-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+  }
+
+  .order-card-value {
+    font-size: 15px;
+    color: #111827;
+    word-break: break-word;
+  }
+
+  .order-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .order-card-actions a,
+  .order-card-actions button {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    text-decoration: none;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .order-btn-edit {
+    background: #f5f3ff;
+    border: 1px solid #ddd6fe;
+    color: #6d28d9;
+  }
+
+  .order-btn-delete {
+    background: #dc2626;
+    border: none;
+    color: #fff;
+  }
+
+  @media (max-width: 768px) {
+    .orders-desktop {
+      display: none;
+    }
+
+    .orders-mobile {
+      display: block;
+    }
+
+    .order-card {
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .order-card-header {
+      margin-bottom: 10px;
+    }
+
+    .order-card-title {
+      font-size: 16px;
+    }
+
+    .order-card-subtitle {
+      font-size: 13px;
+    }
+
+    .order-card-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 10px;
+      margin-bottom: 10px;
+    }
+
+    .order-card-label {
+      font-size: 11px;
+    }
+
+    .order-card-value {
+      font-size: 14px;
+    }
+
+    .order-card-actions {
+      gap: 6px;
+    }
+  }
+</style>
+
+<h2>Заказы</h2>
+<p class="page-subtitle">Все оформленные заказы с быстрым редактированием и удалением.</p>
+
+<div class="actions">
+  <a href="/orders/add">Добавить заказ</a>
+</div>
+
+<div class="orders-desktop">
+  <div class="table-card">
+    <table style="min-width: 980px;">
+      <tr>
+        <th style="width:70px;">ID</th>
+        <th style="min-width:180px;">Клиент</th>
+        <th style="min-width:180px;">Услуга</th>
+        <th style="width:120px;">Цена</th>
+        <th style="width:120px;">Оплата</th>
+        <th style="width:120px;">Статус</th>
+        <th style="width:150px;">Дата</th>
+        <th style="min-width:230px;">Действия</th>
+      </tr>
+
+      {{range .Orders}}
+      <tr>
+        <td style="padding-top:14px; padding-bottom:14px;">{{.ID}}</td>
+        <td style="padding-top:14px; padding-bottom:14px;"><strong>{{.ClientName}}</strong></td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{.Service}}</td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{.Price}} ₸</td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{if eq .PaymentType "cash"}}Наличные{{else if eq .PaymentType "transfer"}}Перевод{{else}}{{.PaymentType}}{{end}}</td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{if eq .Status "new"}}Новый{{else if eq .Status "done"}}Готово{{else}}{{.Status}}{{end}}</td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{.CreatedAt}}</td>
+        <td style="padding-top:12px; padding-bottom:12px;">
+          <div class="row-actions">
+            <a href="/orders/edit?id={{.ID}}" style="text-decoration:none; padding:8px 12px; border-radius:8px; background:#f5f3ff; border:1px solid #ddd6fe; color:#6d28d9; font-size:14px; font-weight:600;">Редактировать</a>
+            <form method="POST" action="/orders/delete?id={{.ID}}" class="inline-form" style="margin:0;">
+              <button type="submit" style="width:auto; margin-top:0; padding:8px 12px; border-radius:8px; background:#dc2626; color:#fff; border:none; font-size:14px; font-weight:600;">Удалить</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="8" style="padding-top:18px; padding-bottom:18px; text-align:center; color:#6b7280;">Заказов пока нет</td>
+      </tr>
+      {{end}}
+    </table>
+  </div>
+</div>
+
+<div class="orders-mobile">
+  {{range .Orders}}
+  <div class="order-card">
+    <div class="order-card-header">
+      <div>
+        <h3 class="order-card-title">{{.Service}}</h3>
+        <div class="order-card-subtitle">{{.ClientName}}</div>
+      </div>
+      <div class="order-card-id">ID: {{.ID}}</div>
+    </div>
+
+    <div class="order-card-grid">
+      <div class="order-card-row">
+        <div class="order-card-label">Цена</div>
+        <div class="order-card-value">{{.Price}} ₸</div>
+      </div>
+
+      <div class="order-card-row">
+        <div class="order-card-label">Оплата</div>
+        <div class="order-card-value">{{if eq .PaymentType "cash"}}Наличные{{else if eq .PaymentType "transfer"}}Перевод{{else}}{{.PaymentType}}{{end}}</div>
+      </div>
+
+      <div class="order-card-row">
+        <div class="order-card-label">Статус</div>
+        <div class="order-card-value">{{if eq .Status "new"}}Новый{{else if eq .Status "done"}}Готово{{else}}{{.Status}}{{end}}</div>
+      </div>
+
+      <div class="order-card-row">
+        <div class="order-card-label">Дата</div>
+        <div class="order-card-value">{{.CreatedAt}}</div>
+      </div>
+    </div>
+
+    <div class="order-card-actions">
+      <a href="/orders/edit?id={{.ID}}" class="order-btn-edit">Редактировать</a>
+      <form method="POST" action="/orders/delete?id={{.ID}}" style="margin:0;">
+        <button type="submit" class="order-btn-delete">Удалить</button>
+      </form>
+    </div>
+  </div>
+  {{else}}
+  <div class="table-card" style="padding:18px; text-align:center; color:#6b7280;">Заказов пока нет</div>
+  {{end}}
+</div>
+{{end}}

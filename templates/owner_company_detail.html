@@ -1,0 +1,160 @@
+{{define "content"}}
+<h2>Компания</h2>
+<p class="page-subtitle">Подробная информация по компании <strong>{{.Company.Name}}</strong>.</p>
+
+<style>
+  @media (max-width: 900px) {
+    .company-detail-stats {
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+    }
+
+    .company-detail-stats .stat-card {
+      min-height: auto !important;
+      padding: 14px !important;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .company-detail-stats .stat-card h3 {
+      margin: 0 0 8px 0 !important;
+      font-size: 16px !important;
+    }
+
+    .company-detail-stats .stat-card p {
+      margin: 0 !important;
+      font-size: 16px !important;
+    }
+
+    .company-detail-grid {
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+    }
+
+    .company-detail-actions {
+      display: grid;
+      gap: 8px;
+    }
+
+    .company-detail-actions a,
+    .company-detail-actions button {
+      width: 100%;
+      text-align: center;
+    }
+
+    .company-detail-actions form {
+      margin: 0;
+    }
+  }
+</style>
+
+<div class="stats company-detail-stats" style="margin-bottom: 18px; display:grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 16px; align-items: stretch;">
+  <div class="stat-card" style="min-height: 132px; display:flex; flex-direction:column; justify-content:flex-start; padding:18px;">
+    <div>
+      <h3 style="margin-bottom:10px;">Компания</h3>
+      <p style="font-size:20px; margin:0; line-height:1.25;">{{.Company.Name}}</p>
+    </div>
+    <div style="margin-top:10px; color:#6b7280; font-size:14px; line-height:1.4;">ID: {{.Company.ID}}</div>
+  </div>
+
+  <div class="stat-card" style="min-height: 132px; display:flex; flex-direction:column; justify-content:flex-start; padding:18px;">
+    <div>
+      <h3 style="margin-bottom:10px;">Lead</h3>
+      <p style="font-size:20px; margin:0; line-height:1.25;">{{if .LeadName}}{{.LeadName}}{{else}}—{{end}}</p>
+    </div>
+    <div style="margin-top:10px; color:#6b7280; font-size:14px; line-height:1.4;">Закреплённый lead</div>
+  </div>
+
+  <div class="stat-card" style="min-height: 132px; display:flex; flex-direction:column; justify-content:flex-start; padding:18px;">
+    <div>
+      <h3 style="margin-bottom:10px;">Статус</h3>
+      <p style="margin:0; line-height:1.2;">
+        {{if .Company.IsActive}}
+          <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; font-weight:600; font-size:13px;">Активна</span>
+        {{else}}
+          <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-weight:600; font-size:13px;">Неактивна</span>
+        {{end}}
+      </p>
+    </div>
+    <div style="margin-top:10px; color:#6b7280; font-size:14px; line-height:1.4;">Создана: {{.Company.CreatedAt}}</div>
+  </div>
+</div>
+
+<div class="table-card" style="margin-top: 0; padding: 18px; margin-bottom: 18px;">
+  <h3 style="margin:0 0 14px 0;">Основная информация</h3>
+  <div class="company-detail-grid" style="display:grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 14px 18px;">
+    <div>
+      <div style="color:#6b7280; font-size:13px; margin-bottom:4px;">Trial</div>
+      <div>{{if .Company.TrialUntil}}{{.Company.TrialUntil}}{{else}}—{{end}}</div>
+    </div>
+    <div>
+      <div style="color:#6b7280; font-size:13px; margin-bottom:4px;">Подписка</div>
+      <div>{{if .Company.SubscriptionUntil}}{{.Company.SubscriptionUntil}}{{else}}—{{end}}</div>
+    </div>
+    <div>
+      <div style="color:#6b7280; font-size:13px; margin-bottom:4px;">Клиентов в системе</div>
+      <div>{{.ClientsCount}}</div>
+    </div>
+    <div>
+      <div style="color:#6b7280; font-size:13px; margin-bottom:4px;">Заказов</div>
+      <div>{{.OrdersCount}}</div>
+    </div>
+    <div>
+      <div style="color:#6b7280; font-size:13px; margin-bottom:4px;">Расходов</div>
+      <div>{{.ExpensesCount}}</div>
+    </div>
+    <div>
+      <div style="color:#6b7280; font-size:13px; margin-bottom:4px;">Доступ client</div>
+      <div>
+        {{if .HasClientAccess}}
+          <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-weight:600; font-size:13px;">Выдан</span>
+        {{else}}
+          <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; border:1px solid #e5e7eb; color:#6b7280; font-weight:600; font-size:13px;">Нет</span>
+        {{end}}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="table-card" style="margin-top: 0; padding: 18px; margin-bottom: 18px;">
+  <h3 style="margin:0 0 14px 0;">Client-доступ</h3>
+  {{if .HasClientAccess}}
+    <div class="company-detail-grid" style="display:grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 14px 18px;">
+      <div>
+        <div style="color:#6b7280; font-size:13px; margin-bottom:4px;">Имя</div>
+        <div>{{.ClientUser.FullName}}</div>
+      </div>
+      <div>
+        <div style="color:#6b7280; font-size:13px; margin-bottom:4px;">Email</div>
+        <div>{{.ClientUser.Email}}</div>
+      </div>
+      <div>
+        <div style="color:#6b7280; font-size:13px; margin-bottom:4px;">Создан</div>
+        <div>{{.ClientUser.CreatedAt}}</div>
+      </div>
+      <div>
+        <div style="color:#6b7280; font-size:13px; margin-bottom:4px;">Роль</div>
+        <div>{{.ClientUser.Role}}</div>
+      </div>
+    </div>
+  {{else}}
+    <div style="color:#6b7280; line-height:1.5;">Для этой компании пока не выдан client-доступ.</div>
+  {{end}}
+</div>
+
+<div class="actions company-detail-actions">
+  <a href="/owner/dashboard">Назад в dashboard</a>
+  <form method="POST" action="/owner/companies/extend?company_id={{.Company.ID}}" style="margin:0; display:inline-block;">
+    <button type="submit" style="width:auto; margin-top:0; padding:10px 14px; border-radius:10px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:14px; font-weight:600;">Продлить +30 дней</button>
+  </form>
+  <form method="POST" action="/owner/companies/toggle?company_id={{.Company.ID}}" style="margin:0; display:inline-block;">
+    {{if .Company.IsActive}}
+      <button type="submit" style="width:auto; margin-top:0; padding:10px 14px; border-radius:10px; background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; font-size:14px; font-weight:600;">Деактивировать</button>
+    {{else}}
+      <button type="submit" style="width:auto; margin-top:0; padding:10px 14px; border-radius:10px; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:14px; font-weight:600;">Активировать</button>
+    {{end}}
+  </form>
+</div>
+{{end}}

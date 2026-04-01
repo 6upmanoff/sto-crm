@@ -1,0 +1,28 @@
+{{define "content"}}
+<h2>Редактировать клиента</h2>
+<p class="page-subtitle">Изменение данных клиента, машины и контактов.</p>
+
+<form method="POST">
+  <label>Имя:</label><br>
+  <input type="text" name="name" value="{{.Client.Name}}" placeholder="Например: Ержан" required>
+
+  <br><br>
+
+  <label>Телефон:</label><br>
+  <input type="text" name="phone" value="{{.Client.Phone}}" placeholder="Например: +7 777 123 45 67">
+
+  <br><br>
+
+  <label>Номер машины:</label><br>
+  <input type="text" name="car_number" value="{{.Client.CarNumber}}" placeholder="Например: 123ABC04">
+
+  <br><br>
+
+  <label>Модель машины:</label><br>
+  <input type="text" name="car_model" value="{{.Client.CarModel}}" placeholder="Например: Toyota Camry">
+
+  <br><br>
+
+  <button type="submit">Сохранить</button>
+</form>
+{{end}}

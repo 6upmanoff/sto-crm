@@ -1,0 +1,197 @@
+{{define "content"}}
+<style>
+  .client-detail-desktop-orders {
+    display: block;
+  }
+
+  .client-detail-mobile-orders {
+    display: none;
+  }
+
+  .client-info-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 14px 18px;
+    align-items: start;
+  }
+
+  .client-info-label {
+    color: #6b7280;
+    font-weight: 600;
+  }
+
+  .client-order-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    margin-bottom: 14px;
+  }
+
+  .client-order-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .client-order-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .client-order-card-id {
+    font-size: 13px;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .client-order-card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .client-order-card-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .client-order-card-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+  }
+
+  .client-order-card-value {
+    font-size: 15px;
+    color: #111827;
+    word-break: break-word;
+  }
+
+  @media (max-width: 768px) {
+    .client-info-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .client-detail-desktop-orders {
+      display: none;
+    }
+
+    .client-detail-mobile-orders {
+      display: block;
+    }
+
+    .client-order-card-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<h2>История клиента</h2>
+<p class="page-subtitle">Подробная информация по клиенту и всем его заказам.</p>
+
+<div class="table-card" style="margin-bottom: 22px; padding: 22px;">
+  <div class="client-info-grid">
+    <div class="client-info-label">Имя</div>
+    <div><strong>{{.Client.Name}}</strong></div>
+
+    <div class="client-info-label">Телефон</div>
+    <div>{{if .Client.Phone}}{{.Client.Phone}}{{else}}—{{end}}</div>
+
+    <div class="client-info-label">Номер машины</div>
+    <div>{{if .Client.CarNumber}}{{.Client.CarNumber}}{{else}}—{{end}}</div>
+
+    <div class="client-info-label">Модель</div>
+    <div>{{if .Client.CarModel}}{{.Client.CarModel}}{{else}}—{{end}}</div>
+
+    <div class="client-info-label">Всего потратил</div>
+    <div><strong>{{.TotalSpent}} ₸</strong></div>
+  </div>
+</div>
+
+<div class="actions" style="margin-bottom: 22px;">
+  <a href="/clients">← Назад к клиентам</a>
+  <a href="/clients/edit?id={{.Client.ID}}">Редактировать клиента</a>
+  <a href="/orders/add">Новый заказ</a>
+</div>
+
+<h3 style="margin-bottom: 8px;">Заказы клиента</h3>
+<p style="margin-top: 0; color:#6b7280;">Все заказы этого клиента в одном месте.</p>
+
+<div class="client-detail-desktop-orders">
+  <div class="table-card">
+    <table style="min-width: 860px;">
+      <tr>
+        <th style="width:70px;">ID</th>
+        <th>Услуга</th>
+        <th style="width:130px;">Цена</th>
+        <th style="width:130px;">Оплата</th>
+        <th style="width:130px;">Статус</th>
+        <th style="width:160px;">Дата</th>
+      </tr>
+
+      {{range .Orders}}
+      <tr>
+        <td style="padding-top:14px; padding-bottom:14px;">{{.ID}}</td>
+        <td style="padding-top:14px; padding-bottom:14px;"><strong>{{.Service}}</strong></td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{.Price}} ₸</td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{if eq .PaymentType "cash"}}Наличные{{else if eq .PaymentType "transfer"}}Перевод{{else}}{{.PaymentType}}{{end}}</td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{if eq .Status "new"}}Новый{{else if eq .Status "done"}}Готово{{else}}{{.Status}}{{end}}</td>
+        <td style="padding-top:14px; padding-bottom:14px;">{{.CreatedAt}}</td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="6" style="padding-top:22px; padding-bottom:22px; text-align:center; color:#6b7280;">У этого клиента пока нет заказов</td>
+      </tr>
+      {{end}}
+    </table>
+  </div>
+</div>
+
+<div class="client-detail-mobile-orders">
+  {{range .Orders}}
+  <div class="client-order-card">
+    <div class="client-order-card-header">
+      <h3 class="client-order-card-title">{{.Service}}</h3>
+      <div class="client-order-card-id">ID: {{.ID}}</div>
+    </div>
+
+    <div class="client-order-card-grid">
+      <div class="client-order-card-row">
+        <div class="client-order-card-label">Цена</div>
+        <div class="client-order-card-value">{{.Price}} ₸</div>
+      </div>
+
+      <div class="client-order-card-row">
+        <div class="client-order-card-label">Оплата</div>
+        <div class="client-order-card-value">{{if eq .PaymentType "cash"}}Наличные{{else if eq .PaymentType "transfer"}}Перевод{{else}}{{.PaymentType}}{{end}}
+        </div>
+      </div>
+
+      <div class="client-order-card-row">
+        <div class="client-order-card-label">Статус</div>
+        <div class="client-order-card-value">{{if eq .Status "new"}}Новый{{else if eq .Status "done"}}Готово{{else}}{{.Status}}{{end}}</div>
+      </div>
+
+      <div class="client-order-card-row">
+        <div class="client-order-card-label">Дата</div>
+        <div class="client-order-card-value">{{.CreatedAt}}</div>
+      </div>
+    </div>
+  </div>
+  {{else}}
+  <div class="table-card" style="padding:18px; text-align:center; color:#6b7280;">У этого клиента пока нет заказов</div>
+  {{end}}
+</div>
+{{end}}
