@@ -145,7 +145,18 @@
 </style>
 
 <h2>Расходы</h2>
+
 <p class="page-subtitle">Все расходы с быстрым редактированием и удалением.</p>
+
+<div style="margin-top:12px; margin-bottom:16px; display:flex; gap:10px; align-items:center;">
+  <label style="font-size:14px; color:#6b7280;">Период:</label>
+  <select onchange="window.location.href='/expenses?period=' + this.value" style="padding:8px 12px; border-radius:8px; border:1px solid #e5e7eb; font-size:14px;">
+    <option value="day" {{if eq .SelectedPeriod "day"}}selected{{end}}>Сегодня</option>
+    <option value="week" {{if eq .SelectedPeriod "week"}}selected{{end}}>Неделя</option>
+    <option value="month" {{if eq .SelectedPeriod "month"}}selected{{end}}>Месяц</option>
+    <option value="year" {{if eq .SelectedPeriod "year"}}selected{{end}}>Год</option>
+  </select>
+</div>
 
 <div class="actions">
   <a href="/expenses/add">Добавить расход</a>

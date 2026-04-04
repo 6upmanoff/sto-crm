@@ -134,7 +134,25 @@
       <td style="padding-top:12px; padding-bottom:12px;"><strong>{{.Name}}</strong></td>
       <td style="padding-top:12px; padding-bottom:12px;">{{if .LeadName}}{{.LeadName}}{{else}}—{{end}}</td>
       <td style="padding-top:12px; padding-bottom:12px;">{{if .TrialUntil}}{{.TrialUntil}}{{else}}—{{end}}</td>
-      <td style="padding-top:12px; padding-bottom:12px;">{{if .SubscriptionUntil}}{{.SubscriptionUntil}}{{else}}—{{end}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;">
+        {{if .SubscriptionUntil}}
+          {{if .SubscriptionExpired}}
+            <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-weight:600; font-size:13px;">
+              {{.SubscriptionUntil}}
+            </span>
+          {{else if .SubscriptionSoon}}
+            <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#fffbeb; border:1px solid #fde68a; color:#92400e; font-weight:600; font-size:13px;">
+              {{.SubscriptionUntil}}
+            </span>
+          {{else}}
+            <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; font-weight:600; font-size:13px;">
+              {{.SubscriptionUntil}}
+            </span>
+          {{end}}
+        {{else}}
+          —
+        {{end}}
+      </td>
       <td style="padding-top:12px; padding-bottom:12px;">
         {{if .IsActive}}
           <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; font-weight:600; font-size:13px; line-height:1.2;">Активна</span>
@@ -162,8 +180,8 @@
             {{end}}
           </form>
 
-          <form method="POST" action="/owner/companies/extend?company_id={{.ID}}" style="margin:0;">
-            <button type="submit" style="width:auto; margin-top:0; padding:8px 12px; border-radius:8px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:13px; font-weight:600;">Продлить +30 дней</button>
+          <form method="POST" action="/owner/companies/pay?company_id={{.ID}}" style="margin:0;" onsubmit="return confirm('Подтвердить оплату и продлить на 30 дней?');">
+            <button type="submit" style="width:auto; margin-top:0; padding:8px 12px; border-radius:8px; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:13px; font-weight:600;">Оплачено +30 дней</button>
           </form>
         </div>
       </td>
@@ -198,7 +216,25 @@
       </div>
       <div>
         <div class="owner-company-meta-label">Подписка</div>
-        <div>{{if .SubscriptionUntil}}{{.SubscriptionUntil}}{{else}}—{{end}}</div>
+        <div>
+          {{if .SubscriptionUntil}}
+            {{if .SubscriptionExpired}}
+              <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-weight:600; font-size:13px;">
+                {{.SubscriptionUntil}}
+              </span>
+            {{else if .SubscriptionSoon}}
+              <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#fffbeb; border:1px solid #fde68a; color:#92400e; font-weight:600; font-size:13px;">
+                {{.SubscriptionUntil}}
+              </span>
+            {{else}}
+              <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; font-weight:600; font-size:13px;">
+                {{.SubscriptionUntil}}
+              </span>
+            {{end}}
+          {{else}}
+            —
+          {{end}}
+        </div>
       </div>
       <div>
         <div class="owner-company-meta-label">Статус</div>
@@ -229,8 +265,8 @@
     <div class="owner-company-actions">
       <a href="/owner/companies/view?id={{.ID}}" style="display:flex; text-decoration:none; padding:10px 14px; border-radius:10px; background:#f8fafc; color:#0f172a; border:1px solid #cbd5e1; font-size:14px; font-weight:600;">Открыть</a>
 
-      <form method="POST" action="/owner/companies/extend?company_id={{.ID}}">
-        <button type="submit" style="margin-top:0; padding:10px 14px; border-radius:10px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:14px; font-weight:600;">Продлить +30 дней</button>
+      <form method="POST" action="/owner/companies/pay?company_id={{.ID}}" onsubmit="return confirm('Подтвердить оплату и продлить на 30 дней?');">
+        <button type="submit" style="margin-top:0; padding:10px 14px; border-radius:10px; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:14px; font-weight:600;">Оплачено +30 дней</button>
       </form>
 
       <form method="POST" action="/owner/companies/toggle?company_id={{.ID}}">

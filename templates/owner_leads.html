@@ -59,6 +59,7 @@
       <th style="width:130px;">Активных</th>
       <th style="width:130px;">С доступом</th>
       <th style="width:170px;">Создан</th>
+      <th style="width:120px;">Действие</th>
     </tr>
 
     {{range .Leads}}
@@ -70,10 +71,13 @@
       <td style="padding-top:12px; padding-bottom:12px;">{{.ActiveCompaniesCount}}</td>
       <td style="padding-top:12px; padding-bottom:12px;">{{.AccessIssuedCount}}</td>
       <td style="padding-top:12px; padding-bottom:12px;">{{.CreatedAt}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;">
+        <a href="/owner/leads/view?id={{.ID}}" style="display:inline-block; text-decoration:none; padding:8px 12px; border-radius:8px; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-size:13px; font-weight:600;">Открыть</a>
+      </td>
     </tr>
     {{else}}
     <tr>
-      <td colspan="7" style="text-align:center; color:#6b7280; padding:22px 18px; line-height:1.45;">
+      <td colspan="8" style="text-align:center; color:#6b7280; padding:22px 18px; line-height:1.45;">
         Пока нет lead-пользователей
       </td>
     </tr>
@@ -112,6 +116,10 @@
         <div>{{.CreatedAt}}</div>
       </div>
     </div>
+
+    <a href="/owner/leads/view?id={{.ID}}" style="display:inline-block; margin-top:10px; text-decoration:none; padding:10px 14px; border-radius:10px; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-size:14px; font-weight:600; text-align:center;">
+      Открыть
+    </a>
   </div>
   {{else}}
   <div class="owner-lead-card" style="text-align:center; color:#6b7280;">

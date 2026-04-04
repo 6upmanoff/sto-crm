@@ -76,6 +76,7 @@
 
     .lead-company-actions a {
       width: 100%;
+      box-sizing: border-box;
       text-align: center;
     }
   }
@@ -127,9 +128,9 @@
       <td>{{.CreatedAt}}</td>
       <td>
         {{if .HasAccess}}
-          <span>Доступ выдан</span>
+          <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; border:1px solid #e5e7eb; color:#6b7280; font-weight:600; font-size:13px; line-height:1.2;">Доступ выдан</span>
         {{else}}
-          <a href="/lead/companies/access?company_id={{.ID}}">Выдать доступ</a>
+          <a href="/lead/companies/access?company_id={{.ID}}" style="display:inline-block; text-decoration:none; padding:8px 12px; border-radius:8px; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-size:14px; font-weight:600; line-height:1.2;">Выдать доступ</a>
         {{end}}
       </td>
     </tr>
@@ -163,9 +164,9 @@
 
     <div class="lead-company-actions">
       {{if .HasAccess}}
-        <span style="text-align:center;">Доступ выдан</span>
+        <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#f3f4f6; border:1px solid #e5e7eb; color:#6b7280; font-weight:600; font-size:13px; line-height:1.2; text-align:center;">Доступ выдан</span>
       {{else}}
-        <a href="/lead/companies/access?company_id={{.ID}}">Выдать доступ</a>
+        <a href="/lead/companies/access?company_id={{.ID}}" style="display:inline-block; width:100%; box-sizing:border-box; text-decoration:none; padding:10px 14px; border-radius:10px; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-size:14px; font-weight:600; line-height:1.2; text-align:center;">Выдать доступ</a>
       {{end}}
     </div>
   </div>

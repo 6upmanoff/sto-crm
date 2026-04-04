@@ -1,0 +1,166 @@
+{{define "content"}}
+<h2>Lead: {{.Lead.FullName}}</h2>
+<p class="page-subtitle">Контроль компаний и активности</p>
+
+<div class="actions" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+  <a href="/owner/leads">← Назад</a>
+
+  <form method="POST" action="/owner/leads/delete?id={{.Lead.ID}}" style="margin:0;" onsubmit="return confirm('Удалить этого lead? Это действие нельзя отменить.');">
+    <button type="submit" style="width:auto; margin-top:0; padding:10px 14px; border-radius:10px; background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; font-size:14px; font-weight:600;">
+      Удалить lead
+    </button>
+  </form>
+</div>
+
+<style>
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .stat-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .stat-card h3 {
+    margin: 0;
+    font-size: 22px;
+  }
+
+  .stat-card p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #6b7280;
+  }
+
+  .companies {
+    margin-top: 16px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .company-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .badge-green {
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    color: #065f46;
+  }
+
+  .badge-red {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+  }
+
+  .company-meta {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #475569;
+  }
+
+  .btn {
+    display: inline-block;
+    margin-top: 10px;
+    text-decoration: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  @media (max-width: 900px) {
+    .stats {
+      grid-template-columns: 1fr;
+    }
+    .actions {
+      display: grid !important;
+      gap: 8px !important;
+    }
+
+    .actions a,
+    .actions button {
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+
+<div class="stats">
+  <div class="stat-card">
+    <h3>{{len .Companies}}</h3>
+    <p>Компаний</p>
+  </div>
+
+  <div class="stat-card">
+    <h3>{{.ActiveCount}}</h3>
+    <p>Активных</p>
+  </div>
+
+  <div class="stat-card">
+    <h3>{{len .Companies}}</h3>
+    <p>Всего</p>
+  </div>
+  <div class="stat-card">
+    <h3>{{.PaidCount}}</h3>
+    <p>Платящих</p>
+  </div>
+
+  <div class="stat-card">
+    <h3>{{.Revenue}} тг</h3>
+    <p>Доход</p>
+  </div>
+
+  <div class="stat-card">
+    <h3>{{.LeadShare}} тг</h3>
+    <p>Доля лида</p>
+  </div>
+</div>
+
+<div class="companies">
+  {{range .Companies}}
+  <div class="company-card">
+    <h3>{{.Name}}</h3>
+
+    {{if .IsActive}}
+      <span class="badge badge-green">Активна</span>
+    {{else}}
+      <span class="badge badge-red">Неактивна</span>
+    {{end}}
+
+    <div class="company-meta">
+      Trial: {{if .TrialUntil}}{{.TrialUntil}}{{else}}—{{end}}<br>
+      Подписка: {{if .SubscriptionUntil}}{{.SubscriptionUntil}}{{else}}—{{end}}
+    </div>
+
+    <a href="/owner/companies/view?id={{.ID}}" class="btn">Открыть</a>
+  </div>
+  {{else}}
+  <div class="company-card" style="text-align:center; color:#6b7280;">
+    У этого lead пока нет компаний
+  </div>
+  {{end}}
+</div>
+{{end}}

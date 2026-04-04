@@ -18,9 +18,11 @@ func main() {
 	http.HandleFunc("/owner/companies/view", ownerCompanyDetailHandler)
 	http.HandleFunc("/owner/companies/toggle", ownerCompanyToggleHandler)
 	http.HandleFunc("/owner/companies/extend", ownerCompanyExtendHandler)
+	http.HandleFunc("/owner/companies/pay", ownerCompanyPayHandler)
 	http.HandleFunc("/lead/dashboard", leadDashboardHandler)
 	http.HandleFunc("/lead/companies/add", leadCompanyAddHandler)
 	http.HandleFunc("/lead/companies/access", leadCompanyAccessHandler)
+	http.HandleFunc("/lead/income", leadIncomeHandler)
 
 	http.HandleFunc("/", dashboardHandler)
 	http.HandleFunc("/clients", clientsHandler)
@@ -36,6 +38,8 @@ func main() {
 	http.HandleFunc("/expenses/add", expenseAddHandler)
 	http.HandleFunc("/expenses/edit", expenseEditHandler)
 	http.HandleFunc("/expenses/delete", expenseDeleteHandler)
+	http.HandleFunc("/owner/leads/view", ownerLeadDetailHandler)
+	http.HandleFunc("/owner/leads/delete", ownerLeadDeleteHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {

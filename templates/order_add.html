@@ -1,11 +1,11 @@
 {{define "content"}}
 <h2>Добавить заказ</h2>
-<p class="page-subtitle">Оформление нового заказа для клиента.</p>
+<p class="page-subtitle">Оформление нового заказа. Клиента можно не указывать.</p>
 
 <form method="POST">
   <label>Клиент:</label><br>
-  <select name="client_id" required>
-    <option value="">Выберите клиента</option>
+  <select name="client_id">
+    <option value="">Без клиента</option>
     {{range .Clients}}
     <option value="{{.ID}}">{{.Name}}</option>
     {{end}}

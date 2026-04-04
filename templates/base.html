@@ -34,6 +34,7 @@
 
       <nav class="nav desktop-nav app-nav app-nav-lead" style="display:none;">
         <a href="/lead/dashboard">Мои компании</a>
+        <a href="/lead/income">Доход</a>
         <a href="/logout" style="margin-left:12px; background:#7f1d1d; border-color:#991b1b; color:#fff;">Выйти</a>
       </nav>
 
@@ -63,6 +64,7 @@
 
     <nav class="mobile-nav app-mobile-nav app-mobile-nav-lead" style="display:none;">
       <a href="/lead/dashboard" onclick="document.body.classList.remove('menu-open')">Мои компании</a>
+      <a href="/lead/income" onclick="document.body.classList.remove('menu-open')">Доход</a>
       <a href="/logout" onclick="document.body.classList.remove('menu-open')" style="background:#fef2f2; border-color:#fecaca; color:#b91c1c;">Выйти</a>
     </nav>
 
@@ -80,6 +82,9 @@
   </div>
 <script>
   (function () {
+    var path = window.location.pathname || '';
+    var isAuthPage = path === '/login' || path.indexOf('/login') === 0;
+
     var isLeadArea = window.location.pathname.indexOf('/lead/') === 0;
     var isOwnerArea = window.location.pathname.indexOf('/owner/') === 0;
 
@@ -97,6 +102,22 @@
     var clientMobile = document.querySelector('.app-mobile-nav-client');
     var leadMobile = document.querySelector('.app-mobile-nav-lead');
     var ownerMobile = document.querySelector('.app-mobile-nav-owner');
+
+    if (isAuthPage) {
+      // hide all menus on auth pages
+      if (clientDesktop) clientDesktop.style.display = 'none';
+      if (leadDesktop) leadDesktop.style.display = 'none';
+      if (ownerDesktop) ownerDesktop.style.display = 'none';
+      if (clientMobile) clientMobile.style.display = 'none';
+      if (leadMobile) leadMobile.style.display = 'none';
+      if (ownerMobile) ownerMobile.style.display = 'none';
+
+      // also hide burger button
+      var toggle = document.querySelector('.menu-toggle');
+      if (toggle) toggle.style.display = 'none';
+
+      return; // stop further menu logic
+    }
 
     if (isLeadArea) {
       if (clientDesktop) clientDesktop.style.display = 'none';

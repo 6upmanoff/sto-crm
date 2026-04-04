@@ -1,0 +1,166 @@
+{{define "content"}}
+<h2>Доход</h2>
+<p class="page-subtitle">Ваши выплаты и доход по оплатам компаний.</p>
+
+<style>
+  .income-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .income-stat-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  .income-stat-label {
+    color: #6b7280;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .income-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #0f172a;
+  }
+
+  .income-mobile-list {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .income-stats {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .income-table {
+      display: none;
+    }
+
+    .income-mobile-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .income-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .income-card h3 {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    .income-card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 14px;
+    }
+
+    .income-card-label {
+      color: #6b7280;
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+  }
+</style>
+
+<div class="income-stats">
+  <div class="income-stat-card">
+    <div class="income-stat-label">Общая выручка по оплатам</div>
+    <div class="income-stat-value">{{.TotalRevenue}} тг</div>
+  </div>
+
+  <div class="income-stat-card">
+    <div class="income-stat-label">Ваш доход</div>
+    <div class="income-stat-value">{{.TotalIncome}} тг</div>
+  </div>
+</div>
+
+<div class="table-card income-table">
+  <table>
+    <tr>
+      <th style="width:70px;">ID</th>
+      <th>Компания</th>
+      <th style="width:130px;">Оплата</th>
+      <th style="width:120px;">%</th>
+      <th style="width:140px;">Ваш доход</th>
+      <th style="width:170px;">Дата</th>
+    </tr>
+
+    {{range .Payments}}
+    <tr>
+      <td style="padding-top:12px; padding-bottom:12px;">{{.ID}}</td>
+      <td style="padding-top:12px; padding-bottom:12px;"><strong>{{.CompanyName}}</strong></td>
+      <td style="padding-top:12px; padding-bottom:12px;">{{.Amount}} тг</td>
+      <td style="padding-top:12px; padding-bottom:12px;">{{.LeadPercent}}%</td>
+      <td style="padding-top:12px; padding-bottom:12px;">
+        <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; font-weight:600; font-size:13px;">
+          {{.LeadAmount}} тг
+        </span>
+      </td>
+      <td style="padding-top:12px; padding-bottom:12px;">{{.CreatedAt}}</td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="6" style="text-align:center; color:#6b7280; padding:22px 18px; line-height:1.45;">
+        Пока нет оплат
+      </td>
+    </tr>
+    {{end}}
+  </table>
+</div>
+
+<div class="income-mobile-list">
+  {{range .Payments}}
+  <div class="income-card">
+    <h3>{{.CompanyName}}</h3>
+
+    <div class="income-card-grid">
+      <div>
+        <div class="income-card-label">ID</div>
+        <div>{{.ID}}</div>
+      </div>
+      <div>
+        <div class="income-card-label">Дата</div>
+        <div>{{.CreatedAt}}</div>
+      </div>
+      <div>
+        <div class="income-card-label">Оплата</div>
+        <div>{{.Amount}} тг</div>
+      </div>
+      <div>
+        <div class="income-card-label">Процент</div>
+        <div>{{.LeadPercent}}%</div>
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <div class="income-card-label">Ваш доход</div>
+        <div>
+          <span style="display:inline-block; padding:6px 10px; border-radius:999px; background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; font-weight:600; font-size:13px;">
+            {{.LeadAmount}} тг
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{else}}
+  <div class="income-card" style="text-align:center; color:#6b7280; line-height:1.45;">
+    Пока нет оплат
+  </div>
+  {{end}}
+</div>
+{{end}}

@@ -2,9 +2,11 @@ package main
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"encoding/hex"
 	"html/template"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -678,18 +680,54 @@ func ownerDashboardHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Определяем статус подписки
+		subscriptionExpired := false
+		subscriptionSoon := false
+
+		if c.SubscriptionUntil != "" {
+			// формат: DD.MM.YYYY
+			t, err := time.Parse("02.01.2006", c.SubscriptionUntil)
+			if err == nil {
+				today := time.Now().Truncate(24 * time.Hour)
+
+				if t.Before(today) {
+					subscriptionExpired = true
+				} else if t.Sub(today) <= 5*24*time.Hour {
+					subscriptionSoon = true
+				}
+			}
+		}
+
 		companies = append(companies, map[string]interface{}{
-			"ID":                c.ID,
-			"Name":              c.Name,
-			"TrialUntil":        c.TrialUntil,
-			"SubscriptionUntil": c.SubscriptionUntil,
-			"IsActive":          c.IsActive,
-			"LeadUserID":        c.LeadUserID,
-			"LeadName":          leadName,
-			"CreatedAt":         c.CreatedAt,
-			"HasAccess":         clientCount > 0,
+			"ID":                  c.ID,
+			"Name":                c.Name,
+			"TrialUntil":          c.TrialUntil,
+			"SubscriptionUntil":   c.SubscriptionUntil,
+			"IsActive":            c.IsActive,
+			"LeadUserID":          c.LeadUserID,
+			"LeadName":            leadName,
+			"CreatedAt":           c.CreatedAt,
+			"HasAccess":           clientCount > 0,
+			"SubscriptionExpired": subscriptionExpired,
+			"SubscriptionSoon":    subscriptionSoon,
 		})
 	}
+
+	sort.SliceStable(companies, func(i, j int) bool {
+		iExpired, _ := companies[i]["SubscriptionExpired"].(bool)
+		jExpired, _ := companies[j]["SubscriptionExpired"].(bool)
+		if iExpired != jExpired {
+			return iExpired
+		}
+
+		iSoon, _ := companies[i]["SubscriptionSoon"].(bool)
+		jSoon, _ := companies[j]["SubscriptionSoon"].(bool)
+		if iSoon != jSoon {
+			return iSoon
+		}
+
+		return false
+	})
 
 	var leadsCount int
 	err = db.QueryRow(`SELECT COUNT(*) FROM users WHERE role = 'lead'`).Scan(&leadsCount)
@@ -896,6 +934,24 @@ func ownerCompanyDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Определяем статус подписки
+	subscriptionExpired := false
+	subscriptionSoon := false
+
+	if company.SubscriptionUntil != "" {
+		// формат: DD.MM.YYYY
+		t, err := time.Parse("02.01.2006", company.SubscriptionUntil)
+		if err == nil {
+			today := time.Now().Truncate(24 * time.Hour)
+
+			if t.Before(today) {
+				subscriptionExpired = true
+			} else if t.Sub(today) <= 5*24*time.Hour {
+				subscriptionSoon = true
+			}
+		}
+	}
+
 	var clientUser User
 	var hasClientAccess bool
 	err = db.QueryRow(`
@@ -940,14 +996,16 @@ func ownerCompanyDetailHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"Title":           "Компания",
-		"Company":         company,
-		"LeadName":        leadName,
-		"HasClientAccess": hasClientAccess,
-		"ClientUser":      clientUser,
-		"ClientsCount":    clientsCount,
-		"OrdersCount":     ordersCount,
-		"ExpensesCount":   expensesCount,
+		"Title":               "Компания",
+		"Company":             company,
+		"LeadName":            leadName,
+		"HasClientAccess":     hasClientAccess,
+		"ClientUser":          clientUser,
+		"ClientsCount":        clientsCount,
+		"OrdersCount":         ordersCount,
+		"ExpensesCount":       expensesCount,
+		"SubscriptionExpired": subscriptionExpired,
+		"SubscriptionSoon":    subscriptionSoon,
 	}
 
 	renderTemplate(w, "owner_company_detail.html", data)
@@ -978,6 +1036,70 @@ func ownerCompanyToggleHandler(w http.ResponseWriter, r *http.Request) {
 	`, companyID)
 	if err != nil {
 		http.Error(w, "Ошибка изменения статуса компании", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/owner/dashboard", http.StatusSeeOther)
+}
+
+func ownerCompanyPayHandler(w http.ResponseWriter, r *http.Request) {
+	_, ok := requireRole(w, r, "owner")
+	if !ok {
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+		return
+	}
+
+	companyIDStr := r.URL.Query().Get("company_id")
+	companyID, err := strconv.Atoi(companyIDStr)
+	if err != nil {
+		http.Error(w, "Неверный ID компании", http.StatusBadRequest)
+		return
+	}
+
+	var leadID sql.NullInt64
+	err = db.QueryRow(`
+		SELECT lead_user_id
+		FROM companies
+		WHERE id = $1
+	`, companyID).Scan(&leadID)
+	if err != nil {
+		http.Error(w, "Компания не найдена", http.StatusNotFound)
+		return
+	}
+
+	// Продлеваем подписку на 30 дней от сегодня
+	_, err = db.Exec(`
+		UPDATE companies
+		SET subscription_until = CURRENT_DATE + INTERVAL '30 days',
+		    is_active = true
+		WHERE id = $1
+	`, companyID)
+	if err != nil {
+		http.Error(w, "Ошибка фиксации оплаты", http.StatusInternalServerError)
+		return
+	}
+
+	amount := 5000.0
+	leadPercent := 40.0
+	leadAmount := amount * leadPercent / 100.0
+
+	var leadIDValue interface{}
+	if leadID.Valid {
+		leadIDValue = leadID.Int64
+	} else {
+		leadIDValue = nil
+	}
+
+	_, err = db.Exec(`
+		INSERT INTO payments (company_id, lead_id, amount, lead_percent, lead_amount)
+		VALUES ($1, $2, $3, $4, $5)
+	`, companyID, leadIDValue, amount, leadPercent, leadAmount)
+	if err != nil {
+		http.Error(w, "Ошибка сохранения оплаты", http.StatusInternalServerError)
 		return
 	}
 
@@ -1108,11 +1230,18 @@ func orderEditHandler(w http.ResponseWriter, r *http.Request) {
 		paymentType := r.FormValue("payment_type")
 		status := r.FormValue("status")
 
+		var clientIDValue interface{}
+		if clientID == "" {
+			clientIDValue = nil
+		} else {
+			clientIDValue = clientID
+		}
+
 		_, err := db.Exec(`
 			UPDATE orders
 			SET client_id = $1, service = $2, price = $3, payment_type = $4, status = $5
 			WHERE id = $6 AND company_id = $7
-		`, clientID, service, price, paymentType, status, id, companyID)
+		`, clientIDValue, service, price, paymentType, status, id, companyID)
 		if err != nil {
 			http.Error(w, "Ошибка обновления заказа", http.StatusInternalServerError)
 			return
@@ -1131,14 +1260,18 @@ func orderEditHandler(w http.ResponseWriter, r *http.Request) {
 		Status      string
 	}
 
+	var clientID sql.NullInt64
 	err = db.QueryRow(`
 		SELECT id, client_id, service, price, payment_type, status
 		FROM orders
 		WHERE id = $1 AND company_id = $2
-	`, id, companyID).Scan(&order.ID, &order.ClientID, &order.Service, &order.Price, &order.PaymentType, &order.Status)
+	`, id, companyID).Scan(&order.ID, &clientID, &order.Service, &order.Price, &order.PaymentType, &order.Status)
 	if err != nil {
 		http.Error(w, "Заказ не найден", http.StatusNotFound)
 		return
+	}
+	if clientID.Valid {
+		order.ClientID = int(clientID.Int64)
 	}
 
 	rows, err := db.Query(`SELECT id, name FROM clients WHERE company_id = $1 ORDER BY name`, companyID)
@@ -1202,14 +1335,59 @@ func ordersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	companyID := currentCompanyID(r)
 
-	rows, err := db.Query(`
-		SELECT o.id, o.company_id, o.client_id, c.name, o.service, o.price, o.payment_type, o.status,
-		       TO_CHAR(o.created_at, 'DD.MM.YYYY HH24:MI')
-		FROM orders o
-		LEFT JOIN clients c ON c.id = o.client_id AND c.company_id = o.company_id
-		WHERE o.company_id = $1
-		ORDER BY o.id DESC
-	`, companyID)
+	period := r.URL.Query().Get("period")
+	if period == "" {
+		period = "day"
+	}
+
+	var (
+		rows *sql.Rows
+		err  error
+	)
+
+	switch period {
+	case "week":
+		rows, err = db.Query(`
+			SELECT o.id, o.company_id, o.client_id, COALESCE(c.name, 'Без клиента'), o.service, o.price, o.payment_type, o.status,
+			       TO_CHAR(o.created_at, 'DD.MM.YYYY HH24:MI')
+			FROM orders o
+			LEFT JOIN clients c ON c.id = o.client_id AND c.company_id = o.company_id
+			WHERE o.company_id = $1
+			  AND date_trunc('week', o.created_at) = date_trunc('week', CURRENT_DATE)
+			ORDER BY o.id DESC
+		`, companyID)
+	case "month":
+		rows, err = db.Query(`
+			SELECT o.id, o.company_id, o.client_id, COALESCE(c.name, 'Без клиента'), o.service, o.price, o.payment_type, o.status,
+			       TO_CHAR(o.created_at, 'DD.MM.YYYY HH24:MI')
+			FROM orders o
+			LEFT JOIN clients c ON c.id = o.client_id AND c.company_id = o.company_id
+			WHERE o.company_id = $1
+			  AND date_trunc('month', o.created_at) = date_trunc('month', CURRENT_DATE)
+			ORDER BY o.id DESC
+		`, companyID)
+	case "year":
+		rows, err = db.Query(`
+			SELECT o.id, o.company_id, o.client_id, COALESCE(c.name, 'Без клиента'), o.service, o.price, o.payment_type, o.status,
+			       TO_CHAR(o.created_at, 'DD.MM.YYYY HH24:MI')
+			FROM orders o
+			LEFT JOIN clients c ON c.id = o.client_id AND c.company_id = o.company_id
+			WHERE o.company_id = $1
+			  AND date_trunc('year', o.created_at) = date_trunc('year', CURRENT_DATE)
+			ORDER BY o.id DESC
+		`, companyID)
+	default:
+		period = "day"
+		rows, err = db.Query(`
+			SELECT o.id, o.company_id, o.client_id, COALESCE(c.name, 'Без клиента'), o.service, o.price, o.payment_type, o.status,
+			       TO_CHAR(o.created_at, 'DD.MM.YYYY HH24:MI')
+			FROM orders o
+			LEFT JOIN clients c ON c.id = o.client_id AND c.company_id = o.company_id
+			WHERE o.company_id = $1
+			  AND o.created_at::date = CURRENT_DATE
+			ORDER BY o.id DESC
+		`, companyID)
+	}
 	if err != nil {
 		http.Error(w, "Ошибка загрузки заказов", http.StatusInternalServerError)
 		return
@@ -1220,10 +1398,11 @@ func ordersHandler(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var o Order
+		var clientID sql.NullInt64
 		err := rows.Scan(
 			&o.ID,
 			&o.CompanyID,
-			&o.ClientID,
+			&clientID,
 			&o.ClientName,
 			&o.Service,
 			&o.Price,
@@ -1231,6 +1410,9 @@ func ordersHandler(w http.ResponseWriter, r *http.Request) {
 			&o.Status,
 			&o.CreatedAt,
 		)
+		if clientID.Valid {
+			o.ClientID = int(clientID.Int64)
+		}
 		if err != nil {
 			http.Error(w, "Ошибка чтения заказов", http.StatusInternalServerError)
 			return
@@ -1239,8 +1421,9 @@ func ordersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"Title":  "Заказы",
-		"Orders": orders,
+		"Title":          "Заказы",
+		"Orders":         orders,
+		"SelectedPeriod": period,
 	}
 
 	renderTemplate(w, "orders.html", data)
@@ -1260,10 +1443,17 @@ func orderAddHandler(w http.ResponseWriter, r *http.Request) {
 		paymentType := r.FormValue("payment_type")
 		status := r.FormValue("status")
 
+		var clientIDValue interface{}
+		if clientID == "" {
+			clientIDValue = nil
+		} else {
+			clientIDValue = clientID
+		}
+
 		_, err := db.Exec(`
 			INSERT INTO orders (company_id, client_id, service, price, payment_type, status)
 			VALUES ($1, $2, $3, $4, $5, $6)
-		`, companyID, clientID, service, price, paymentType, status)
+		`, companyID, clientIDValue, service, price, paymentType, status)
 		if err != nil {
 			http.Error(w, "Ошибка сохранения", http.StatusInternalServerError)
 			return
@@ -1308,6 +1498,11 @@ func dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	companyID := currentCompanyID(r)
 
+	period := r.URL.Query().Get("period")
+	if period == "" {
+		period = "day"
+	}
+
 	var totalRevenue float64
 	var ordersCount int
 	var totalExpenses float64
@@ -1318,7 +1513,38 @@ func dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.QueryRow(`SELECT COUNT(*) FROM orders WHERE company_id = $1`, companyID).Scan(&ordersCount)
+	// Количество заказов по выбранному периоду
+	switch period {
+	case "week":
+		err = db.QueryRow(`
+			SELECT COUNT(*)
+			FROM orders
+			WHERE company_id = $1
+			  AND date_trunc('week', created_at) = date_trunc('week', CURRENT_DATE)
+		`, companyID).Scan(&ordersCount)
+	case "month":
+		err = db.QueryRow(`
+			SELECT COUNT(*)
+			FROM orders
+			WHERE company_id = $1
+			  AND date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)
+		`, companyID).Scan(&ordersCount)
+	case "year":
+		err = db.QueryRow(`
+			SELECT COUNT(*)
+			FROM orders
+			WHERE company_id = $1
+			  AND date_trunc('year', created_at) = date_trunc('year', CURRENT_DATE)
+		`, companyID).Scan(&ordersCount)
+	default:
+		// день
+		err = db.QueryRow(`
+			SELECT COUNT(*)
+			FROM orders
+			WHERE company_id = $1
+			  AND created_at::date = CURRENT_DATE
+		`, companyID).Scan(&ordersCount)
+	}
 	if err != nil {
 		http.Error(w, "Ошибка загрузки количества заказов", http.StatusInternalServerError)
 		return
@@ -1332,12 +1558,135 @@ func dashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	profit := totalRevenue - totalExpenses
 
+	// Периоды: сегодня, неделя, месяц, год
+	var todayRevenue, weekRevenue, monthRevenue, yearRevenue float64
+	var todayExpenses, weekExpenses, monthExpenses, yearExpenses float64
+
+	// Сегодня
+	err = db.QueryRow(`
+		SELECT COALESCE(SUM(price), 0)
+		FROM orders
+		WHERE company_id = $1 AND created_at::date = CURRENT_DATE
+	`, companyID).Scan(&todayRevenue)
+	if err != nil {
+		http.Error(w, "Ошибка загрузки выручки за сегодня", http.StatusInternalServerError)
+		return
+	}
+	err = db.QueryRow(`
+		SELECT COALESCE(SUM(amount), 0)
+		FROM expenses
+		WHERE company_id = $1 AND created_at::date = CURRENT_DATE
+	`, companyID).Scan(&todayExpenses)
+	if err != nil {
+		http.Error(w, "Ошибка загрузки расходов за сегодня", http.StatusInternalServerError)
+		return
+	}
+
+	// Неделя (с начала недели)
+	err = db.QueryRow(`
+		SELECT COALESCE(SUM(price), 0)
+		FROM orders
+		WHERE company_id = $1 AND date_trunc('week', created_at) = date_trunc('week', CURRENT_DATE)
+	`, companyID).Scan(&weekRevenue)
+	if err != nil {
+		http.Error(w, "Ошибка загрузки выручки за неделю", http.StatusInternalServerError)
+		return
+	}
+	err = db.QueryRow(`
+		SELECT COALESCE(SUM(amount), 0)
+		FROM expenses
+		WHERE company_id = $1 AND date_trunc('week', created_at) = date_trunc('week', CURRENT_DATE)
+	`, companyID).Scan(&weekExpenses)
+	if err != nil {
+		http.Error(w, "Ошибка загрузки расходов за неделю", http.StatusInternalServerError)
+		return
+	}
+
+	// Месяц
+	err = db.QueryRow(`
+		SELECT COALESCE(SUM(price), 0)
+		FROM orders
+		WHERE company_id = $1 AND date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)
+	`, companyID).Scan(&monthRevenue)
+	if err != nil {
+		http.Error(w, "Ошибка загрузки выручки за месяц", http.StatusInternalServerError)
+		return
+	}
+	err = db.QueryRow(`
+		SELECT COALESCE(SUM(amount), 0)
+		FROM expenses
+		WHERE company_id = $1 AND date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)
+	`, companyID).Scan(&monthExpenses)
+	if err != nil {
+		http.Error(w, "Ошибка загрузки расходов за месяц", http.StatusInternalServerError)
+		return
+	}
+
+	// Год
+	err = db.QueryRow(`
+		SELECT COALESCE(SUM(price), 0)
+		FROM orders
+		WHERE company_id = $1 AND date_trunc('year', created_at) = date_trunc('year', CURRENT_DATE)
+	`, companyID).Scan(&yearRevenue)
+	if err != nil {
+		http.Error(w, "Ошибка загрузки выручки за год", http.StatusInternalServerError)
+		return
+	}
+	err = db.QueryRow(`
+		SELECT COALESCE(SUM(amount), 0)
+		FROM expenses
+		WHERE company_id = $1 AND date_trunc('year', created_at) = date_trunc('year', CURRENT_DATE)
+	`, companyID).Scan(&yearExpenses)
+	if err != nil {
+		http.Error(w, "Ошибка загрузки расходов за год", http.StatusInternalServerError)
+		return
+	}
+
+	// Прибыль по периодам
+	todayProfit := todayRevenue - todayExpenses
+	weekProfit := weekRevenue - weekExpenses
+	monthProfit := monthRevenue - monthExpenses
+	yearProfit := yearRevenue - yearExpenses
+
+	switch period {
+	case "week":
+		totalRevenue = weekRevenue
+		totalExpenses = weekExpenses
+		profit = weekProfit
+	case "month":
+		totalRevenue = monthRevenue
+		totalExpenses = monthExpenses
+		profit = monthProfit
+	case "year":
+		totalRevenue = yearRevenue
+		totalExpenses = yearExpenses
+		profit = yearProfit
+	default:
+		period = "day"
+		totalRevenue = todayRevenue
+		totalExpenses = todayExpenses
+		profit = todayProfit
+	}
+
 	data := map[string]interface{}{
-		"Title":         "Главная",
-		"TotalRevenue":  totalRevenue,
-		"OrdersCount":   ordersCount,
-		"TotalExpenses": totalExpenses,
-		"Profit":        profit,
+		"Title":          "Главная",
+		"TotalRevenue":   totalRevenue,
+		"OrdersCount":    ordersCount,
+		"TotalExpenses":  totalExpenses,
+		"Profit":         profit,
+		"SelectedPeriod": period,
+		"TodayRevenue":   todayRevenue,
+		"TodayExpenses":  todayExpenses,
+		"TodayProfit":    todayProfit,
+		"WeekRevenue":    weekRevenue,
+		"WeekExpenses":   weekExpenses,
+		"WeekProfit":     weekProfit,
+		"MonthRevenue":   monthRevenue,
+		"MonthExpenses":  monthExpenses,
+		"MonthProfit":    monthProfit,
+		"YearRevenue":    yearRevenue,
+		"YearExpenses":   yearExpenses,
+		"YearProfit":     yearProfit,
 	}
 
 	renderTemplate(w, "dashboard.html", data)
@@ -1350,13 +1699,55 @@ func expensesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	companyID := currentCompanyID(r)
 
-	rows, err := db.Query(`
-		SELECT id, company_id, name, amount,
-		       TO_CHAR(created_at, 'DD.MM.YYYY HH24:MI')
-		FROM expenses
-		WHERE company_id = $1
-		ORDER BY id DESC
-	`, companyID)
+	period := r.URL.Query().Get("period")
+	if period == "" {
+		period = "day"
+	}
+
+	var (
+		rows *sql.Rows
+		err  error
+	)
+
+	switch period {
+	case "week":
+		rows, err = db.Query(`
+			SELECT id, company_id, name, amount,
+			       TO_CHAR(created_at, 'DD.MM.YYYY HH24:MI')
+			FROM expenses
+			WHERE company_id = $1
+			  AND date_trunc('week', created_at) = date_trunc('week', CURRENT_DATE)
+			ORDER BY id DESC
+		`, companyID)
+	case "month":
+		rows, err = db.Query(`
+			SELECT id, company_id, name, amount,
+			       TO_CHAR(created_at, 'DD.MM.YYYY HH24:MI')
+			FROM expenses
+			WHERE company_id = $1
+			  AND date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)
+			ORDER BY id DESC
+		`, companyID)
+	case "year":
+		rows, err = db.Query(`
+			SELECT id, company_id, name, amount,
+			       TO_CHAR(created_at, 'DD.MM.YYYY HH24:MI')
+			FROM expenses
+			WHERE company_id = $1
+			  AND date_trunc('year', created_at) = date_trunc('year', CURRENT_DATE)
+			ORDER BY id DESC
+		`, companyID)
+	default:
+		period = "day"
+		rows, err = db.Query(`
+			SELECT id, company_id, name, amount,
+			       TO_CHAR(created_at, 'DD.MM.YYYY HH24:MI')
+			FROM expenses
+			WHERE company_id = $1
+			  AND created_at::date = CURRENT_DATE
+			ORDER BY id DESC
+		`, companyID)
+	}
 	if err != nil {
 		http.Error(w, "Ошибка загрузки расходов", http.StatusInternalServerError)
 		return
@@ -1376,8 +1767,9 @@ func expensesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"Title":    "Расходы",
-		"Expenses": expenses,
+		"Title":          "Расходы",
+		"Expenses":       expenses,
+		"SelectedPeriod": period,
 	}
 
 	renderTemplate(w, "expenses.html", data)
@@ -1641,4 +2033,214 @@ func clientDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/clients", http.StatusSeeOther)
+}
+
+func ownerLeadDetailHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+
+	// Получаем lead
+	var lead struct {
+		ID       int
+		FullName string
+	}
+
+	err := db.QueryRow(`
+        SELECT id, full_name
+        FROM users
+        WHERE id = $1 AND role = 'lead'
+    `, id).Scan(&lead.ID, &lead.FullName)
+
+	if err != nil {
+		http.Error(w, "Lead not found", 404)
+		return
+	}
+
+	// Получаем компании этого lead
+	rows, err := db.Query(`
+        SELECT
+            id,
+            name,
+            is_active,
+            COALESCE(TO_CHAR(trial_until, 'DD.MM.YYYY'), ''),
+            COALESCE(TO_CHAR(subscription_until, 'DD.MM.YYYY'), '')
+        FROM companies
+        WHERE lead_user_id = $1
+        ORDER BY id DESC
+    `, id)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	defer rows.Close()
+
+	var companies []struct {
+		ID                int
+		Name              string
+		IsActive          bool
+		TrialUntil        *string
+		SubscriptionUntil *string
+	}
+
+	for rows.Next() {
+		var c struct {
+			ID                int
+			Name              string
+			IsActive          bool
+			TrialUntil        *string
+			SubscriptionUntil *string
+		}
+
+		rows.Scan(&c.ID, &c.Name, &c.IsActive, &c.TrialUntil, &c.SubscriptionUntil)
+		companies = append(companies, c)
+	}
+
+	activeCount := 0
+	for _, c := range companies {
+		if c.IsActive {
+			activeCount++
+		}
+	}
+
+	var paidCount int
+	err = db.QueryRow(`
+		SELECT COUNT(*)
+		FROM companies
+		WHERE lead_user_id = $1
+		  AND subscription_until IS NOT NULL
+		  AND subscription_until >= CURRENT_DATE
+	`, id).Scan(&paidCount)
+	if err != nil {
+		http.Error(w, "Ошибка подсчёта платящих компаний", http.StatusInternalServerError)
+		return
+	}
+
+	revenue := paidCount * 5000
+	leadShare := revenue * 40 / 100
+
+	data := map[string]interface{}{
+		"Lead":        lead,
+		"Companies":   companies,
+		"ActiveCount": activeCount,
+		"PaidCount":   paidCount,
+		"Revenue":     revenue,
+		"LeadShare":   leadShare,
+	}
+
+	renderTemplate(w, "owner_lead_detail.html", data)
+}
+
+func ownerLeadDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	_, ok := requireRole(w, r, "owner")
+	if !ok {
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+		return
+	}
+
+	idStr := r.URL.Query().Get("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Неверный ID lead", http.StatusBadRequest)
+		return
+	}
+
+	// Проверяем есть ли компании
+	var companiesCount int
+	err = db.QueryRow(`
+		SELECT COUNT(*)
+		FROM companies
+		WHERE lead_user_id = $1
+	`, id).Scan(&companiesCount)
+	if err != nil {
+		http.Error(w, "Ошибка проверки компаний", http.StatusInternalServerError)
+		return
+	}
+
+	if companiesCount > 0 {
+		http.Error(w, "Нельзя удалить lead, у которого есть компании", http.StatusBadRequest)
+		return
+	}
+
+	// Удаляем сессии
+	_, _ = db.Exec(`DELETE FROM sessions WHERE user_id = $1`, id)
+
+	// Удаляем пользователя
+	_, err = db.Exec(`DELETE FROM users WHERE id = $1 AND role = 'lead'`, id)
+	if err != nil {
+		http.Error(w, "Ошибка удаления lead", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/owner/leads", http.StatusSeeOther)
+}
+
+func leadIncomeHandler(w http.ResponseWriter, r *http.Request) {
+	user, ok := requireRole(w, r, "lead")
+	if !ok {
+		return
+	}
+
+	rows, err := db.Query(`
+		SELECT
+			p.id,
+			COALESCE(c.name, 'Без компании'),
+			p.amount,
+			p.lead_percent,
+			p.lead_amount,
+			TO_CHAR(p.created_at, 'DD.MM.YYYY HH24:MI')
+		FROM payments p
+		LEFT JOIN companies c ON c.id = p.company_id
+		WHERE p.lead_id = $1
+		ORDER BY p.id DESC
+	`, user.ID)
+	if err != nil {
+		http.Error(w, "Ошибка загрузки доходов lead", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var payments []map[string]interface{}
+	var totalIncome float64
+	var totalRevenue float64
+
+	for rows.Next() {
+		var id int
+		var companyName string
+		var amount float64
+		var leadPercent float64
+		var leadAmount float64
+		var createdAt string
+
+		err := rows.Scan(&id, &companyName, &amount, &leadPercent, &leadAmount, &createdAt)
+		if err != nil {
+			http.Error(w, "Ошибка чтения доходов lead", http.StatusInternalServerError)
+			return
+		}
+
+		totalRevenue += amount
+		totalIncome += leadAmount
+
+		payments = append(payments, map[string]interface{}{
+			"ID":          id,
+			"CompanyName": companyName,
+			"Amount":      amount,
+			"LeadPercent": leadPercent,
+			"LeadAmount":  leadAmount,
+			"CreatedAt":   createdAt,
+		})
+	}
+
+	data := map[string]interface{}{
+		"Title":        "Доход лида",
+		"User":         user,
+		"Payments":     payments,
+		"TotalIncome":  totalIncome,
+		"TotalRevenue": totalRevenue,
+	}
+
+	renderTemplate(w, "lead_income.html", data)
 }
